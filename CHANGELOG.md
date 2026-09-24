@@ -10,6 +10,7 @@
 
 - Show what to update instead of a blank window when the browser or system WebView is too old, naming the detected macOS, Safari, Chrome, Edge, Firefox, WebKitGTK, or WebView2 version and linking a prefilled bug report, and explain a failed start the same way (#744).
 - Start on macOS 13 with WebKit older than Safari 17.4, which previously failed with `Promise.withResolvers is not a function` (#744).
+- Escape layer names and other text properties in JSX and Tailwind JSX export, so a name containing `"` or `&` no longer adds attributes or changes when the JSX is rendered back.
 
 ## 0.15.1 — 2026-09-18
 
