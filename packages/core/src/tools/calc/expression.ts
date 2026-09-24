@@ -11,10 +11,15 @@ import jsep from 'jsep'
  * and logical operators — is rejected with a message naming what was used.
  */
 
+const smaller = (left: number, right: number): number => Math.min(left, right)
+const larger = (left: number, right: number): number => Math.max(left, right)
+
 /** Functions the tool documents, with their accepted argument counts. */
 const FUNCTIONS = {
-  min: { arity: [1, Number.POSITIVE_INFINITY], apply: (args: number[]) => Math.min(...args) },
-  max: { arity: [1, Number.POSITIVE_INFINITY], apply: (args: number[]) => Math.max(...args) },
+  // Folded rather than spread: a long argument list overflows the call stack
+  // on V8 at roughly 125k arguments, which an expression can reach.
+  min: { arity: [1, Number.POSITIVE_INFINITY], apply: (args: number[]) => args.reduce(smaller) },
+  max: { arity: [1, Number.POSITIVE_INFINITY], apply: (args: number[]) => args.reduce(larger) },
   floor: { arity: [1, 1], apply: ([value]: number[]) => Math.floor(value) },
   ceil: { arity: [1, 1], apply: ([value]: number[]) => Math.ceil(value) },
   round: { arity: [1, 1], apply: ([value]: number[]) => Math.round(value) },
@@ -80,7 +85,8 @@ function callFunction(node: jsep.CallExpression): number {
     throw new CalcSyntaxError(`Cannot call ${describeNode(callee)}`)
   }
   const name = (callee as jsep.Identifier).name
-  if (!(name in FUNCTIONS)) {
+  // hasOwn, not `in`: inherited names such as `constructor` are not functions.
+  if (!Object.hasOwn(FUNCTIONS, name)) {
     throw new CalcSyntaxError(`Unknown function '${name}'; supported: ${CALC_FUNCTIONS.join(', ')}`)
   }
   const args = node.arguments.map(evaluateNode)

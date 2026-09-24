@@ -78,6 +78,12 @@ describe('calc expression evaluator', () => {
       expect(() => evaluateExpression('pow(2)')).toThrow(/takes 2 arguments, received 1/)
     })
 
+    test.each(['min', 'max'])('folds a long %s argument list without spreading it', (name) => {
+      // Spreading overflows the call stack on V8 at roughly 125k arguments.
+      const args = Array.from({ length: 200_000 }, (_, index) => index)
+      expect(evaluateExpression(`${name}(${args.join(',')})`)).toBe(name === 'min' ? 0 : 199_999)
+    })
+
     test('names the supported functions when one is unknown', () => {
       expect(() => evaluateExpression('sin(0)')).toThrow(/Unknown function 'sin'/)
       for (const name of CALC_FUNCTIONS) {
@@ -159,6 +165,17 @@ describe('calc expression evaluator', () => {
 
     test('keeps the character position the parser reports', () => {
       expect(() => evaluateExpression('(1 + 2')).toThrow('character 6')
+    })
+
+    test.each([
+      'constructor(1)',
+      'toString(1)',
+      'valueOf(1)',
+      'hasOwnProperty(1)',
+      '__defineGetter__(1)'
+    ])('refuses %s, an inherited name rather than a function', (expression) => {
+      expect(() => evaluateExpression(expression)).toThrow(CalcSyntaxError)
+      expect(() => evaluateExpression(expression)).toThrow('Unknown function')
     })
   })
 
