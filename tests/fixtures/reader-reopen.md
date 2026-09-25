@@ -1,6 +1,6 @@
 # Reader exports reopened in Figma
 
-Five exports from the occurrence-scoped reader, imported into Figma desktop and read back
+Four exports from the occurrence-scoped reader, imported into Figma desktop and read back
 through the Plugin API. `reader-reopen.json` records the observations.
 
 **Synthetic overrides.** A `Card` component with a variable-bound icon, a label, and a nested
@@ -26,18 +26,22 @@ primary sizing mode, hides the hidden child, and swaps `marker` to `Star`. It ig
 claims on `row` and `marker`, which reopened at the component's sizes; reverting a control edit
 to the component's own `row` confirmed the instance was inheriting rather than overriding.
 
-That gap was addressing, not geometry. Figma resolves an override path segment through the
-target record's `overrideKey`: in `gold-preview.fig` all 10,341 override and 12,838
-derived-geometry segments resolve that way and none resolve to a node GUID. A component
-authored in OpenPencil had no keys, so the writer addressed its descendants by GUID; Figma
-tolerated that for the other fields and dropped the geometry. The writer now allocates keys,
-and `synthetic-overrides-c.fig` is the same fixture re-exported through it.
+Three encodings were tried against that gap and none of them applied the sizes: addressing
+path segments by `overrideKey` (`-c`), adding `overrideLevel` to descendant claims (`-d`), and
+writing `derivedSymbolDataLayoutVersion` (`-e`). Each was suggested by one archive and refuted
+by another — `gold-preview.fig` is a file of library instances and addresses every segment by
+key, while `material3.fig` uses a GUID for 51,332 of its segments; `material3.fig` and
+`nuxtui.fig` carry 100 descendant size claims that differ from their target and mostly have no
+`overrideLevel`. All of them target a nested instance, never a plain frame. Figma's own API
+cannot resize a descendant inside an instance — the call is a silent no-op, in an imported file
+and in a component created through the API alike — so the encoding it writes for that edit has
+not been captured yet.
 
-Four findings came from this file: applied shared styles (`fillStyleId`, `strokeStyleId`,
-`textStyleId`, `effectStyleId`, `gridStyleId`) were not recorded as instance overrides, a nested
-swap lost the child's correspondence to its source so later overrides on it were addressed by
-the wrong record, the export addressed nested overrides by non-definition records, and override
-paths named GUIDs rather than override keys.
+Three findings came from this file and are fixed: applied shared styles (`fillStyleId`,
+`strokeStyleId`, `textStyleId`, `effectStyleId`, `gridStyleId`) were not recorded as instance
+overrides, a nested swap lost the child's correspondence to its source so later overrides on it
+were addressed by the wrong record, and the export addressed nested overrides by non-definition
+records.
 
 **gold-preview (edited).** The Input instance matches `packages/fig/tests/instance/gold-preview.test.ts`:
 three Badge instances with distinct avatar swaps, the badge icon visibility, hidden leading and

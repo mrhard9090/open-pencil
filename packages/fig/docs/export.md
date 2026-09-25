@@ -42,12 +42,10 @@ owner + target correspondence
 Do not serialize a nested claim as only its final source GUID. Structured self overrides use
 an empty target ID internally; the exporter must interpret that as the owner, not discard it.
 
-Each segment names the target record's `overrideKey`, never its GUID: every override and
-derived-geometry path in a Figma-authored archive resolves that way. Keys imported from Figma
-are preserved; a component authored here has none, so the writer allocates one for the
-component and every node inside it, and both the override path and the derived geometry at
-that address use it. Figma tolerates a GUID path for most fields but silently drops geometry
-claims addressed that way, which leaves a resized descendant at its component's size.
+A segment names the target record by GUID, or by its `overrideKey` when the target came from a
+published library and carries one — Figma writes both forms and the reader accepts either.
+`material3.fig` addresses 51,332 segments by GUID against 24 by key, while every segment in the
+library-based `gold-preview.fig` is a key.
 
 Which scene fields are claimable, which raw field each serializes to, and which are placed-space
 lengths comes from one registry (`instance-overrides/fields.ts`); materialization records
