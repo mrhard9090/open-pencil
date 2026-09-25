@@ -1,4 +1,4 @@
-import { wcagLuminance } from 'culori'
+import { wcagContrast } from 'culori'
 import { sumBy } from 'es-toolkit/math'
 
 import type { SceneGraph, SceneNode } from '@open-pencil/scene-graph'
@@ -9,10 +9,19 @@ import { colorToHex } from '#core/color'
 import type { DescribeIssue } from './issues'
 import { CONTAINER_TYPES, findAncestorBackground } from './shared'
 
-const DARK_BG_LUMINANCE = 0.35
+const WCAG_AA_CONTRAST = 4.5
+const WCAG_AA_LARGE_TEXT_CONTRAST = 3
 
-function rgbLuminance(c: Color): number {
-  return wcagLuminance({ mode: 'rgb', r: c.r, g: c.g, b: c.b })
+function contrastRatio(a: Color, b: Color): number {
+  return wcagContrast(
+    { mode: 'rgb', r: a.r, g: a.g, b: a.b },
+    { mode: 'rgb', r: b.r, g: b.g, b: b.b }
+  )
+}
+
+// WCAG large text is at least 18pt, or 14pt bold (1pt = 4/3px).
+function isLargeText(node: SceneNode): boolean {
+  return node.fontSize >= 24 || (node.fontSize >= 56 / 3 && node.fontWeight >= 700)
 }
 
 interface LayoutContext {
@@ -213,14 +222,14 @@ function checkTextVisibility(ctx: LayoutContext): void {
       })
       continue
     }
-    const textLum = rgbLuminance(textFill.color)
-    if (textLum > DARK_BG_LUMINANCE) continue
     const bg = findAncestorBackground(child, graph)
     if (!bg) continue
-    if (rgbLuminance(bg) < DARK_BG_LUMINANCE) {
+    const ratio = contrastRatio(textFill.color, bg)
+    const required = isLargeText(child) ? WCAG_AA_LARGE_TEXT_CONTRAST : WCAG_AA_CONTRAST
+    if (ratio < required) {
       issues.push({
-        message: `"${child.name || child.text.slice(0, 20) || 'Text'}" dark on dark (${colorToHex(textFill.color)} on ${colorToHex(bg)})`,
-        suggestion: 'Use a light color'
+        message: `"${child.name || child.text.slice(0, 20) || 'Text'}" contrast ${ratio.toFixed(2)}:1 is below WCAG AA ${required}:1 (${colorToHex(textFill.color)} on ${colorToHex(bg)})`,
+        suggestion: 'Increase contrast between text and background'
       })
     }
   }
