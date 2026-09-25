@@ -1,6 +1,6 @@
 # Reader exports reopened in Figma
 
-Four exports from the occurrence-scoped reader, imported into Figma desktop and read back
+Five exports from the occurrence-scoped reader, imported into Figma desktop and read back
 through the Plugin API. `reader-reopen.json` records the observations.
 
 **Synthetic overrides.** A `Card` component with a variable-bound icon, a label, and a nested
@@ -22,16 +22,22 @@ auto-layout `row` holding a child that is later hidden and a nested `Dot` instan
 `marker`; an instance carrying the override kinds the first round did not cover. Figma binds the
 box stroke colour to `Accent` and its corner radius to a numeric variable resolving to 8, applies
 the `Heading style` text style to the heading, applies the row's padding, item spacing, and
-primary sizing mode, hides the hidden child, and swaps `marker` to `Star`. Figma does not apply
-a `size` claim on either `row` or `marker`: both are auto-layout children, and Figma's own API
-refuses `resize()` on them while the component's copy of `row` resizes and the instance follows.
-How Figma encodes a descendant size a user sets by hand is still open.
+primary sizing mode, hides the hidden child, and swaps `marker` to `Star`. It ignored the `size`
+claims on `row` and `marker`, which reopened at the component's sizes; reverting a control edit
+to the component's own `row` confirmed the instance was inheriting rather than overriding.
 
-Three findings came from this file and are fixed before Figma saw it: applied shared styles
-(`fillStyleId`, `strokeStyleId`, `textStyleId`, `effectStyleId`, `gridStyleId`) were not
-recorded as instance overrides, a nested swap lost the child's correspondence to its source so
-later overrides on it were addressed by the wrong record, and the export addressed nested
-overrides by non-definition records.
+That gap was addressing, not geometry. Figma resolves an override path segment through the
+target record's `overrideKey`: in `gold-preview.fig` all 10,341 override and 12,838
+derived-geometry segments resolve that way and none resolve to a node GUID. A component
+authored in OpenPencil had no keys, so the writer addressed its descendants by GUID; Figma
+tolerated that for the other fields and dropped the geometry. The writer now allocates keys,
+and `synthetic-overrides-c.fig` is the same fixture re-exported through it.
+
+Four findings came from this file: applied shared styles (`fillStyleId`, `strokeStyleId`,
+`textStyleId`, `effectStyleId`, `gridStyleId`) were not recorded as instance overrides, a nested
+swap lost the child's correspondence to its source so later overrides on it were addressed by
+the wrong record, the export addressed nested overrides by non-definition records, and override
+paths named GUIDs rather than override keys.
 
 **gold-preview (edited).** The Input instance matches `packages/fig/tests/instance/gold-preview.test.ts`:
 three Badge instances with distinct avatar swaps, the badge icon visibility, hidden leading and

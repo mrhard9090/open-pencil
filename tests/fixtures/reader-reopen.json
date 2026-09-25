@@ -15,7 +15,9 @@
     "title": { "textStyle": "Heading style", "fontSize": 24 },
     "row": { "size": [200, 32], "claimedSize": [180, 40], "paddingLeft": 16, "itemSpacing": 12, "primaryAxisSizingMode": "FIXED" },
     "hidden": { "name": "hidden later", "visible": false },
-    "marker": { "mainComponent": "Star", "size": [16, 16], "claimedSize": [24, 24] }
+    "marker": { "mainComponent": "Star", "size": [16, 16], "claimedSize": [24, 24] },
+    "pathAddressing": "guid",
+    "sizeClaimsApplied": false
   },
   "goldPreviewEdited": {
     "inputFrame": { "width": 376.34124755859375, "height": 39.3802604675293 },
