@@ -26,10 +26,12 @@ test('serializes self size claims against the instance main component', async ()
   const exported = nodeChanges.find((node) => node.type === 'INSTANCE')
   const symbol = exported?.symbolData as SymbolData | undefined
   if (!symbol) throw new Error('Missing exported symbol')
+  const mainComponent = nodeChanges.find((node) => node.type === 'SYMBOL')
   expect(exported?.size).toEqual({ x: 16, y: 16 })
   expect(symbol.uniformScaleFactor).toBe(0.5)
+  // Figma addresses an override path segment by the target's override key, not its GUID.
   expect(symbol.symbolOverrides).toContainEqual({
-    guidPath: { guids: [symbol.symbolID] },
+    guidPath: { guids: [mainComponent?.overrideKey] },
     size: { x: 32, y: 32 },
     stackHorizontalPadding: 20
   })

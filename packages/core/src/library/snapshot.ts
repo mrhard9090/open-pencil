@@ -16,7 +16,10 @@ const VOLATILE_NODE_FIELDS = new Set([
   'derivedTextGlyphs',
   'derivedLayout',
   'librarySource',
-  'pluginData'
+  'pluginData',
+  // The writer assigns an override key so instances can address this node; it identifies a
+  // record, not the component's content.
+  'overrideKey'
 ])
 
 function assetKey(node: SceneNode): string {

@@ -526,7 +526,8 @@ export function sceneNodeToKiwi(
   runtime: FigNodeChangeExportRuntime = EMPTY_EXPORT_RUNTIME,
   componentPropertyDefinitionsById = buildComponentPropIndex(graph),
   modeIdToGuid?: Map<string, GUID>,
-  propertyIdToGuid = new Map<string, GUID>()
+  propertyIdToGuid = new Map<string, GUID>(),
+  nodeIdToOverrideKey = new Map<string, GUID>()
 ): KiwiNodeChange[] {
   // Raw paints retain library asset refs; effects use this map because their
   // Kiwi schema accepts only GUID-backed aliases.
@@ -537,6 +538,7 @@ export function sceneNodeToKiwi(
     blobIndexByHex,
     nodeIdToGuid,
     assignedGuidValues,
+    nodeIdToOverrideKey,
     fontDigestMap,
     glyphBlobMap,
     varIdToGuid,

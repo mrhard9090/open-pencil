@@ -24,6 +24,8 @@ export interface SceneNodeToKiwiContext {
   /** Reverse index of assigned GUID values ("sessionID:localID") for O(1)
    *  collision detection. Populated alongside every nodeIdToGuid.set() call. */
   assignedGuidValues?: Set<string>
+  /** Override keys by node id: a definition node's stable address inside an instance. */
+  nodeIdToOverrideKey?: Map<string, GUID>
   fontDigestMap?: Map<string, Uint8Array>
   glyphBlobMap?: Map<string, number>
   varIdToGuid?: Map<string, GUID>
@@ -194,13 +196,42 @@ export function createStrokePaints(context: SceneNodeToKiwiContext, node: SceneN
   )
 }
 
-/** Instances address descendants by override key when one exists, else by node GUID. */
-export function instanceGuidResolver(context: SceneNodeToKiwiContext, counter: { value: number }) {
-  return (id: string): GUID | undefined => {
-    const source = context.graph.getNode(id)
-    return (
-      (source?.overrideKey ? parseGuidOrNull(source.overrideKey) : null) ??
-      getOrCreateNodeGuid(context, id, counter)
-    )
+/**
+ * Figma addresses an override path segment by the target record's override key, never by its
+ * GUID, and ignores geometry claims it cannot resolve that way. Keys imported from Figma are
+ * kept; a node authored here is given one from the shared identity counter, so a component
+ * built in OpenPencil addresses its descendants the same way a Figma-authored one does.
+ */
+export function getOrCreateOverrideKey(
+  context: SceneNodeToKiwiContext,
+  nodeId: string,
+  counter: { value: number }
+): GUID | undefined {
+  const node = context.graph.getNode(nodeId)
+  if (!node) return undefined
+  const existing = context.nodeIdToOverrideKey?.get(nodeId)
+  if (existing) return existing
+  const key = (node.overrideKey ? parseGuidOrNull(node.overrideKey) : null) ?? {
+    sessionID: 1,
+    localID: counter.value++
   }
+  context.nodeIdToOverrideKey?.set(nodeId, key)
+  context.assignedGuidValues?.add(`${key.sessionID}:${key.localID}`)
+  return key
+}
+
+/** Only a definition node can be addressed by a path segment, so only one needs a key. */
+export function isDefinitionNode(context: SceneNodeToKiwiContext, node: SceneNode): boolean {
+  if (node.type === 'COMPONENT') return true
+  let parent = node.parentId ? context.graph.getNode(node.parentId) : undefined
+  while (parent) {
+    if (parent.type === 'COMPONENT') return true
+    parent = parent.parentId ? context.graph.getNode(parent.parentId) : undefined
+  }
+  return false
+}
+
+/** Instances address descendants by override key. */
+export function instanceGuidResolver(context: SceneNodeToKiwiContext, counter: { value: number }) {
+  return (id: string): GUID | undefined => getOrCreateOverrideKey(context, id, counter)
 }

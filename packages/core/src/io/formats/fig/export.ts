@@ -285,6 +285,7 @@ interface InternalResourceContext {
   assignedGuidValues: Set<string>
   componentPropertyDefinitionsById: ReturnType<typeof buildComponentPropIndex>
   propertyIdToGuid: Map<string, GUID>
+  nodeIdToOverrideKey: Map<string, GUID>
 }
 
 function appendInternalResources(context: InternalResourceContext): void {
@@ -317,7 +318,8 @@ function appendInternalResources(context: InternalResourceContext): void {
         context.assignedGuidValues,
         context.componentPropertyDefinitionsById,
         context.modeIdToGuid,
-        context.propertyIdToGuid
+        context.propertyIdToGuid,
+        context.nodeIdToOverrideKey
       )
     )
   }
@@ -382,6 +384,8 @@ export async function exportFigFile(
   const varIdToGuid = new Map<string, GUID>()
   const modeIdToGuid = new Map<string, GUID>()
   const propertyIdToGuid = new Map<string, GUID>()
+  // Override keys address definition nodes across every page, so one map spans the document.
+  const nodeIdToOverrideKey = new Map<string, GUID>()
   const fontDigestMap = await buildFontDigestMap(graph)
   const glyphBlobMap = new Map<string, number>()
   const blobIndexByHex = new Map<string, number>()
@@ -455,7 +459,8 @@ export async function exportFigFile(
     blobIndexByHex,
     assignedGuidValues,
     componentPropertyDefinitionsById,
-    propertyIdToGuid
+    propertyIdToGuid,
+    nodeIdToOverrideKey
   })
 
   const orderedCanvasEntries = [
@@ -483,7 +488,8 @@ export async function exportFigFile(
           assignedGuidValues,
           componentPropertyDefinitionsById,
           modeIdToGuid,
-          propertyIdToGuid
+          propertyIdToGuid,
+          nodeIdToOverrideKey
         )
       )
     }
