@@ -66,7 +66,8 @@ const styles = computed(() => {
       }
     "
   >
-    <icon-lucide-check v-if="variant === 'default'" :class="styles.icon" aria-hidden="true" />
+    <icon-lucide-loader-2 v-if="state !== 'none'" :class="styles.icon" aria-hidden="true" />
+    <icon-lucide-check v-else-if="variant === 'default'" :class="styles.icon" aria-hidden="true" />
     <icon-lucide-triangle-alert v-else :class="styles.icon" aria-hidden="true" />
     <div :class="styles.content" data-slot="toast-content">
       <ToastDescription :class="styles.message">

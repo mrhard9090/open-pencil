@@ -1,3 +1,5 @@
+import { motionStyles } from '@/theme/motion/styles'
+
 const toastTheme = {
   slots: {
     root: 'motion-reduce:data-[state=open]:animate-none motion-reduce:data-[state=closed]:animate-none flex max-w-sm items-start gap-1.5 rounded-md px-2.5 py-1.5 text-xs shadow-md data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=closed]:slide-out-to-top-1 data-[state=open]:animate-in data-[state=open]:fade-in data-[state=open]:slide-in-from-top-1 data-[swipe=cancel]:translate-y-0 data-[swipe=cancel]:transition-transform data-[swipe=move]:translate-y-[var(--reka-toast-swipe-move-y)]',
@@ -26,8 +28,11 @@ const toastTheme = {
     // pulses in place so the toast still reads as work in progress.
     progress: {
       none: {},
-      determinate: {},
-      indeterminate: { progressFill: 'motion-reduce:animate-none w-1/3 animate-pulse' }
+      determinate: { icon: motionStyles.spinner },
+      indeterminate: {
+        icon: motionStyles.spinner,
+        progressFill: 'motion-reduce:animate-none w-1/3 animate-pulse'
+      }
     }
   },
   defaultVariants: { tone: 'default' as const, progress: 'none' as const }
