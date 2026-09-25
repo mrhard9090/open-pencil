@@ -8,7 +8,7 @@ import type {
   VariableValue
 } from '@open-pencil/scene-graph'
 import { copyFills, copyStrokes, copyEffects } from '@open-pencil/scene-graph/copy'
-import { computeAbsoluteBounds, computeBounds } from '@open-pencil/scene-graph/geometry'
+import { computeBounds } from '@open-pencil/scene-graph/geometry'
 import { computeImageHash } from '@open-pencil/scene-graph/images'
 import type { Rect, Vector } from '@open-pencil/scene-graph/primitives'
 
@@ -21,6 +21,7 @@ import type { RasterExportFormat } from '#core/io/formats/raster'
 import { documentFontStatus, type DocumentFontStatus } from '#core/text/font/status'
 
 import { combineComponentsAsVariants, exposeInstanceSwap } from './components'
+import { containerRectInParent } from './container-bounds'
 import type {
   FigmaBooleanOperationNode,
   FigmaComponentNode,
@@ -206,7 +207,12 @@ export class FigmaAPI implements NodeProxyHost {
     index?: number
   ): FigmaGroupNode {
     const parentId = this._nodeId(parent)
-    const groupNode = this.graph.createNode('GROUP', parentId)
+    const nodeIds = nodes.map((node) => this._nodeId(node))
+    const groupNode = this.graph.createNode(
+      'GROUP',
+      parentId,
+      nodeIds.length > 0 ? containerRectInParent(this.graph, nodeIds, parentId) : undefined
+    )
     for (const n of nodes) {
       this.graph.reparentNode(this._nodeId(n), groupNode.id)
     }
@@ -370,24 +376,10 @@ export class FigmaAPI implements NodeProxyHost {
   ): FigmaBooleanOperationNode {
     if (nodes.length < 2) throw new Error('Need at least 2 nodes for boolean operation')
     const parentId = this._nodeId(parent)
-    const operands = nodes.map((node) => {
-      const operand = this.graph.getNode(this._nodeId(node))
-      if (!operand) throw new Error('Node not found')
-      return operand
-    })
-    // Size the node to all operands, as the editor's boolean operation does, not to the first.
-    const bounds = computeAbsoluteBounds(operands, (id) => this.graph.getAbsolutePosition(id))
-    const parentNode = this.graph.getNode(parentId)
-    const parentAbs =
-      !parentNode || parentId === this.graph.rootId || parentNode.type === 'CANVAS'
-        ? { x: 0, y: 0 }
-        : this.graph.getAbsolutePosition(parentId)
+    const nodeIds = nodes.map((node) => this._nodeId(node))
     const group = this.graph.createNode('BOOLEAN_OPERATION', parentId, {
       name: `Boolean ${operation.toLowerCase()}`,
-      x: bounds.x - parentAbs.x,
-      y: bounds.y - parentAbs.y,
-      width: bounds.width,
-      height: bounds.height,
+      ...containerRectInParent(this.graph, nodeIds, parentId),
       booleanOperation: operation
     })
     for (const node of nodes) {
