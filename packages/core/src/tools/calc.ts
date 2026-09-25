@@ -1,9 +1,11 @@
-import ExprEval from 'expr-eval'
+import { Parser } from 'expr-eval-fork'
 import * as v from 'valibot'
 
 import { defineTool } from './schema'
 
-const parser = new ExprEval.Parser()
+// Keep evaluation interpreted and context-free; do not compile user expressions
+// with toJSFunction or provide JavaScript functions through an evaluation scope.
+const parser = new Parser()
 
 function evalExpr(
   expr: string
