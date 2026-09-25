@@ -53,17 +53,9 @@ for (const scale of [0.5, 2]) {
         parsed.nodeChanges.find((node) => node.name === 'Rescaled owner')
       )
       const symbol = exported.symbolData as SymbolData
-      // A path segment names the target's override key, which is how Figma addresses it.
-      const mainComponent = expectDefined(
-        parsed.nodeChanges.find(
-          (node) =>
-            node.guid?.sessionID === symbol.symbolID?.sessionID &&
-            node.guid?.localID === symbol.symbolID?.localID
-        )
-      )
       expect(
         symbol.symbolOverrides?.filter((entry) => entry.size).map((entry) => entry.guidPath?.guids)
-      ).toEqual([[mainComponent.overrideKey]])
+      ).toEqual([[symbol.symbolID]])
       const reopened = materializeDocument(parsed.nodeChanges, parsed.blobs, {
         derivedBounds: true
       }).graph

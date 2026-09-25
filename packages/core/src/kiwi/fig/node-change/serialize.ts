@@ -39,8 +39,7 @@ export function sceneNodeToKiwi(
   assignedGuidValues?: Set<string>,
   componentPropertyDefinitionsById?: ReadonlyMap<string, ComponentPropertyDefinition>,
   modeIdToGuid?: Map<string, GUID>,
-  propertyIdToGuid?: Map<string, GUID>,
-  nodeIdToOverrideKey?: Map<string, GUID>
+  propertyIdToGuid?: Map<string, GUID>
 ): KiwiNodeChange[] {
   return sceneNodeToKiwiWithRuntime(
     node,
@@ -58,7 +57,6 @@ export function sceneNodeToKiwi(
     coreFigExportRuntime,
     componentPropertyDefinitionsById,
     modeIdToGuid,
-    propertyIdToGuid,
-    nodeIdToOverrideKey
+    propertyIdToGuid
   )
 }

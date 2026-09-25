@@ -67,7 +67,6 @@ export async function buildFigmaClipboardHTML(
 
   const nodeIdToGuid = new Map<string, GUID>()
   const assignedGuidValues = new Set<string>()
-  const nodeIdToOverrideKey = new Map<string, GUID>()
   const blobs: Uint8Array[] = []
   const variableIds = new Map<string, GUID>()
   const modeIds = new Map<string, GUID>()
@@ -105,9 +104,7 @@ export async function buildFigmaClipboardHTML(
         undefined,
         assignedGuidValues,
         undefined,
-        modeIds,
-        undefined,
-        nodeIdToOverrideKey
+        modeIds
       )
     )
   }
@@ -159,9 +156,7 @@ export async function buildFigmaClipboardHTML(
         undefined,
         assignedGuidValues,
         undefined,
-        modeIds,
-        undefined,
-        nodeIdToOverrideKey
+        modeIds
       )
     )
   }

@@ -8,8 +8,7 @@ import { expectDefined } from '#tests/helpers/assert'
 
 // Captured from Figma's own clipboard encoding of the same edit: a text override inside a
 // nested instance is addressed as [nested instance, the nested component's child], never as
-// the enclosing component's copy of that child, which is not a record in the archive. Each
-// segment names the target record's override key, which is how Figma resolves a path.
+// the enclosing component's copy of that child, which is not a record in the archive.
 test('an override inside a nested instance addresses the definition child', async () => {
   await initCodec()
   const graph = new SceneGraph()
@@ -26,9 +25,7 @@ test('an override inside a nested instance addresses the definition child', asyn
 
   const bytes = await exportFigFile(graph)
   const { nodeChanges } = parseFigBuffer(bytes.slice().buffer as ArrayBuffer)
-  const keys = new Set(
-    nodeChanges.flatMap((node) => (node.overrideKey ? [guidToString(node.overrideKey)] : []))
-  )
+  const ids = new Set(nodeChanges.flatMap((node) => (node.guid ? [guidToString(node.guid)] : [])))
   const exported = expectDefined(
     nodeChanges.find(
       (node) => node.type === 'INSTANCE' && node.symbolData?.symbolOverrides?.length
@@ -41,9 +38,9 @@ test('an override inside a nested instance addresses the definition child', asyn
   )
   const path = (claim.guidPath?.guids ?? []).map(guidToString)
   expect(path).toHaveLength(2)
-  for (const segment of path) expect(keys.has(segment)).toBe(true)
+  for (const segment of path) expect(ids.has(segment)).toBe(true)
   const definitionCount = nodeChanges.find((node) => node.type === 'TEXT' && node.name === 'count')
-  expect(path[1]).toBe(guidToString(expectDefined(definitionCount?.overrideKey, 'count key')))
+  expect(path[1]).toBe(guidToString(expectDefined(definitionCount?.guid, 'count guid')))
 
   const reopened = await parseFigFile(bytes.slice().buffer as ArrayBuffer)
   const reopenedInstance = expectDefined(
@@ -90,7 +87,7 @@ test('a swap of a nested instance is addressed by the nested instance record', a
     'star record'
   )
   expect((swap.guidPath?.guids ?? []).map(guidToString)).toEqual([
-    guidToString(expectDefined(markerRecord.overrideKey, 'marker key'))
+    guidToString(expectDefined(markerRecord.guid, 'marker guid'))
   ])
   expect(guidToString(expectDefined(swap.overriddenSymbolID, 'replacement'))).toBe(
     guidToString(expectDefined(starRecord.guid, 'star guid'))

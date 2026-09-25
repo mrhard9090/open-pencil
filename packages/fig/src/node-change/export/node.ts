@@ -30,10 +30,8 @@ import {
   createFillPaints,
   createStrokePaints,
   getOrCreateNodeGuid,
-  getOrCreateOverrideKey,
   instanceGuidResolver,
   getOrCreatePropertyGuid,
-  isDefinitionNode,
   parseGuidOrNull,
   resolveInstanceComponentId,
   type KiwiNodeChange,
@@ -600,12 +598,7 @@ function applyComponentMetadata(
   if (node.componentKey) nc.componentKey = node.componentKey
   if (node.sourceLibraryKey) nc.sourceLibraryKey = node.sourceLibraryKey
   const publishId = node.publishId ? parseGuidOrNull(node.publishId) : null
-  // A definition node is addressed by its override key, so it carries one whether or not an
-  // override currently names it; claims resolved earlier reuse the key through the context.
-  const importedKey = node.overrideKey ? parseGuidOrNull(node.overrideKey) : null
-  const overrideKey = isDefinitionNode(context, node)
-    ? getOrCreateOverrideKey(context, node.id, localIdCounter)
-    : importedKey
+  const overrideKey = node.overrideKey ? parseGuidOrNull(node.overrideKey) : null
   if (publishId) nc.publishID = publishId
   if (overrideKey) nc.overrideKey = overrideKey
   if (node.sharedSymbolVersion) nc.sharedSymbolVersion = node.sharedSymbolVersion
