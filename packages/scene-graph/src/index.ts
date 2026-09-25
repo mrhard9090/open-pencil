@@ -537,7 +537,7 @@ export class SceneGraph {
   }
 
   private parentWorldMatrix(parent: SceneNode | undefined): Mat3 {
-    if (!parent || parent.id === this.rootId || parent.type === 'CANVAS') return Matrix.identity()
+    if (!parent || parent.id === this.rootId) return Matrix.identity()
     return getWorldMatrix(parent, this)
   }
 
