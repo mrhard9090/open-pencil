@@ -31,6 +31,7 @@ test('progress without a known total stays indeterminate', async ({ page }) => {
 })
 
 test('a reported total flips between determinate, indeterminate, and cleared', async ({ page }) => {
+  await page.clock.install()
   await page.goto('/iframe.html?id=design-system-toast--progress-lifecycle&viewMode=story')
 
   const toast = page.locator('[data-slot="toast"]')
@@ -44,7 +45,7 @@ test('a reported total flips between determinate, indeterminate, and cleared', a
   await expect(toast.locator('[data-slot="toast-progress-label"]')).toHaveText(
     '13% · 2.9 MiB of 22.9 MiB'
   )
-  await page.waitForTimeout(3_500)
+  await page.clock.fastForward(3_500)
   await expect(toast).toBeVisible()
 
   // Losing the total must drop the value rather than pinning the bar at 13%.
@@ -56,10 +57,12 @@ test('a reported total flips between determinate, indeterminate, and cleared', a
   await page.getByRole('button', { name: 'Clear progress' }).click()
   await expect(toast).toHaveAttribute('data-progress', 'none')
   await expect(toast.getByRole('progressbar')).toHaveCount(0)
-  await expect(toast).toBeHidden({ timeout: 5_000 })
+  await page.clock.fastForward(3_500)
+  await expect(toast).toBeHidden()
 })
 
 test('resuming progress cancels the pending auto-dismissal', async ({ page }) => {
+  await page.clock.install()
   await page.goto('/iframe.html?id=design-system-toast--progress-lifecycle&viewMode=story')
 
   const toast = page.locator('[data-slot="toast"]')
@@ -69,8 +72,8 @@ test('resuming progress cancels the pending auto-dismissal', async ({ page }) =>
   await page.getByRole('button', { name: 'Reset', exact: true }).click()
   await expect(toast).toHaveAttribute('data-progress', 'determinate')
 
-  // Wait beyond the timer installed before progress resumed.
-  await page.waitForTimeout(3_500)
+  // Advance beyond the timer installed before progress resumed.
+  await page.clock.fastForward(3_500)
   await expect(toast).toBeVisible()
   await page.getByRole('button', { name: 'Advance download' }).click()
   await expect(toast.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '13')
