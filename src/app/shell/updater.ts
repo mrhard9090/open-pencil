@@ -81,9 +81,8 @@ async function runUpdateCheck(silent: boolean, messages: Ref<UpdaterMessages>) {
     const progressToast = toast.startProgress(t.downloading({ version: update.version }))
     let reportedLabel = ''
 
-    // Progress events arrive per network chunk, so only publish a label the
-    // user can actually read: the rounded percentage (or the rounded size when
-    // the response carries no `Content-Length`) changes at most a hundred times.
+    // Skip chunks that leave the displayed percentage and rounded byte counts
+    // unchanged. This deduplicates labels; it is not a fixed-rate throttle.
     const reportProgress = () => {
       const label = downloadProgressLabel(t, downloaded, contentLength)
       if (label === reportedLabel) return

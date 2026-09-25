@@ -51,7 +51,10 @@ const styles = computed(() => {
 </script>
 
 <template>
+  <!-- Reka does not cancel an existing dismissal timer when duration becomes 0.
+       Remount when switching lifetime policy so resumed work cannot expire. -->
   <ToastRoot
+    :key="duration === 0 ? 'persistent' : 'timed'"
     data-slot="toast"
     :duration="duration"
     :class="styles.root"

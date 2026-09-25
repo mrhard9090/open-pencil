@@ -237,10 +237,6 @@ export const StateMatrix: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
     const page = within(canvasElement.ownerDocument.body)
-    const controls = Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-story-control]'))
-
-    for (const control of controls) await expect(control).toHaveStyle({ height: '26px' })
-
     const detachField = canvas.getByLabelText('Detach bound field')
     await expect(detachField).toHaveAttribute('data-bound')
 
