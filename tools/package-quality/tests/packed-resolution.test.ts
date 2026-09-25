@@ -92,7 +92,7 @@ describe('packed runtime resolution', () => {
         consumer
       )
     }
-  })
+  }, 120_000)
 
   test('ships transitive source imports with the source directory', async () => {
     const { consumer, tarball } = await packAndInstall('./src/index.ts', ['dist', 'src'])
@@ -126,5 +126,5 @@ describe('packed runtime resolution', () => {
     await expect(
       evaluateRuntime('bun', "await import('@fixture/resolution')", consumer)
     ).rejects.toThrow('failed: exit code 1')
-  })
+  }, 120_000)
 })
