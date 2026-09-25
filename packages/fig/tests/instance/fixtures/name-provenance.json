@@ -15,9 +15,7 @@
           "overrides": [
             {
               "id": "293147:1805",
-              "overriddenFields": [
-                "name"
-              ]
+              "overriddenFields": ["name"]
             }
           ]
         },
@@ -27,9 +25,7 @@
           "overrides": [
             {
               "id": "293147:1806",
-              "overriddenFields": [
-                "name"
-              ]
+              "overriddenFields": ["name"]
             }
           ]
         }
@@ -38,11 +34,7 @@
     "variants": {
       "page": "293150:1807",
       "set": "293150:1810",
-      "components": [
-        "293150:1808",
-        "293150:1809",
-        "293150:1811"
-      ],
+      "components": ["293150:1808", "293150:1809", "293150:1811"],
       "before": [
         {
           "id": "293150:1812",
@@ -55,9 +47,7 @@
           "overrides": [
             {
               "id": "293150:1813",
-              "overriddenFields": [
-                "name"
-              ]
+              "overriddenFields": ["name"]
             }
           ]
         }
@@ -74,9 +64,7 @@
           "overrides": [
             {
               "id": "293150:1813",
-              "overriddenFields": [
-                "name"
-              ]
+              "overriddenFields": ["name"]
             }
           ]
         }
@@ -93,9 +81,7 @@
           "overrides": [
             {
               "id": "293150:1813",
-              "overriddenFields": [
-                "name"
-              ]
+              "overriddenFields": ["name"]
             }
           ]
         }

@@ -1,5 +1,10 @@
 [
-  { "guid": { "sessionID": 7, "localID": 250 }, "type": "FRAME", "name": "AccordionItem", "isStateGroup": true },
+  {
+    "guid": { "sessionID": 7, "localID": 250 },
+    "type": "FRAME",
+    "name": "AccordionItem",
+    "isStateGroup": true
+  },
   {
     "guid": {
       "sessionID": 4,
