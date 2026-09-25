@@ -6,6 +6,10 @@
 
 - The desktop app now requires macOS 13 or later; the web app supports Chrome 111, Edge 111, Firefox 128, and Safari 16.4 or later.
 
+### Added
+
+- Choose PPTX in the Export panel's format list, alongside PNG, JPG, WEBP, SVG, and PDF.
+
 ### Changed
 
 - Show download progress with a percentage and transferred size while installing a desktop update, instead of an indeterminate message that lasted until the restart.
