@@ -26,16 +26,25 @@ primary sizing mode, hides the hidden child, and swaps `marker` to `Star`. It ig
 claims on `row` and `marker`, which reopened at the component's sizes; reverting a control edit
 to the component's own `row` confirmed the instance was inheriting rather than overriding.
 
-Three encodings were tried against that gap and none of them applied the sizes: addressing
-path segments by `overrideKey` (`-c`), adding `overrideLevel` to descendant claims (`-d`), and
-writing `derivedSymbolDataLayoutVersion` (`-e`). Each was suggested by one archive and refuted
-by another — `gold-preview.fig` is a file of library instances and addresses every segment by
-key, while `material3.fig` uses a GUID for 51,332 of its segments; `material3.fig` and
-`nuxtui.fig` carry 100 descendant size claims that differ from their target and mostly have no
-`overrideLevel`. All of them target a nested instance, never a plain frame. Figma's own API
-cannot resize a descendant inside an instance — the call is a silent no-op, in an imported file
-and in a component created through the API alike — so the encoding it writes for that edit has
-not been captured yet.
+Figma does not apply those two `size` claims, and the reason is that the edit they describe does
+not exist in Figma. A descendant inside an instance cannot be resized: `resize()` through the
+Plugin API is a silent no-op on any instance descendant, in an imported file and in a component
+the API creates itself, and the handles are unavailable in the UI. Across `gold-preview.fig`,
+`material3.fig` and `nuxtui.fig` not one size claim targets a descendant that is not an
+instance, and of the 100 that target a nested instance and differ from its record, 82 restate
+that instance's own size claim while the rest are hug heights its text produced. A descendant
+`size` claim is therefore a restatement of a nested instance's own size, never a free resize.
+
+Three encodings were tried before that was clear, each suggested by one archive and refuted by
+another, and all three are reverted: addressing path segments by `overrideKey` (`gold-preview`
+is a file of library instances and addresses every segment by key, while `material3` uses a
+GUID for 51,332 of its segments), `overrideLevel` on descendant claims, and
+`derivedSymbolDataLayoutVersion`.
+
+OpenPencil does allow resizing a layer inside an instance, so it can hold a document Figma
+cannot represent. The writer still records those claims — the reader restores them, so the edit
+survives in OpenPencil — and Figma ignores them on open, keeping the layer at its component's
+size.
 
 Three findings came from this file and are fixed: applied shared styles (`fillStyleId`,
 `strokeStyleId`, `textStyleId`, `effectStyleId`, `gridStyleId`) were not recorded as instance

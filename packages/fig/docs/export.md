@@ -51,6 +51,12 @@ Which scene fields are claimable, which raw field each serializes to, and which 
 lengths comes from one registry (`instance-overrides/fields.ts`); materialization records
 claims and export serializes them from the same table.
 
+A descendant `size` claim has no effect in Figma, which does not allow resizing a layer inside
+an instance: no size claim in `gold-preview.fig`, `material3.fig` or `nuxtui.fig` targets a
+descendant that is not an instance, and the ones that target a nested instance restate that
+instance's own size. OpenPencil permits the edit, so the writer records it and the reader
+restores it; Figma keeps the layer at its component's size on open.
+
 A paint colour alias lives inside the paint, not in the node's parameter map. A `fills` or
 `strokes` claim is therefore written with each paint's `colorVar`, and a
 `boundVariables/fills/N/color` override is serialized as that paint claim rather than as a
