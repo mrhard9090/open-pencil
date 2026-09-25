@@ -59,6 +59,38 @@ describe('FigmaAPI grouping compatibility', () => {
     expect(second.absoluteBoundingBox).toMatchObject({ x: 160, y: 270 })
   })
 
+  test('group and boolean operation inside a rotated frame use the frame axes', () => {
+    const api = createAPI()
+    const frame = api.createFrame()
+    frame.x = 100
+    frame.y = 200
+    frame.resize(300, 300)
+    frame.rotation = 90
+    const make = () => {
+      const first = api.createRectangle()
+      frame.appendChild(first)
+      first.x = 10
+      first.y = 20
+      first.resize(30, 30)
+      const second = api.createRectangle()
+      frame.appendChild(second)
+      second.x = 60
+      second.y = 70
+      second.resize(20, 20)
+      return [first, second]
+    }
+
+    const group = api.group(make(), frame)
+    const booleanNode = api.union(make(), frame)
+
+    for (const node of [group, booleanNode]) {
+      expect(node.x).toBeCloseTo(10, 6)
+      expect(node.y).toBeCloseTo(20, 6)
+      expect(node.width).toBeCloseTo(70, 6)
+      expect(node.height).toBeCloseTo(70, 6)
+    }
+  })
+
   test('ungroup returns moved children', () => {
     const api = createAPI()
     const page = api.currentPage
