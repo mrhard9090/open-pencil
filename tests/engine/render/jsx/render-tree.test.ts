@@ -567,6 +567,31 @@ describe('renderJSX (string → scene graph)', () => {
     expect(result.warnings).toEqual(['Unsupported prop "mt" on <frame> is ignored.'])
   })
 
+  it('accepts blur as the radius of effect helpers', async () => {
+    const g = makeSceneGraph()
+    const [result] = await renderJSX(
+      g,
+      `<Frame w={100} h={60} effects={[dropShadow({ x: 4, y: 4, blur: 12 }), innerShadow({ blur: 6 }), layerBlur({ blur: 3 })]} />`
+    )
+    const node = getNodeOrThrow(g, result.id)
+
+    expect(node.effects.map((effect) => effect.radius)).toEqual([12, 6, 3])
+    expect(result.warnings).toBeUndefined()
+  })
+
+  it('warns about effect helper options it ignores', async () => {
+    const g = makeSceneGraph()
+    const [result] = await renderJSX(
+      g,
+      `<Frame w={100} h={60} effects={[dropShadow({ colour: '#FF0000' }), dropShadow({ colour: '#00FF00' }), backgroundBlur({ amount: 4 })]} />`
+    )
+
+    expect(result.warnings).toEqual([
+      'Unsupported option "colour" in dropShadow() is ignored. Supported options: color, x, y, offset, radius, blur, spread, visible, blendMode, showShadowBehindNode.',
+      'Unsupported option "amount" in backgroundBlur() is ignored. Supported options: radius, blur, visible.'
+    ])
+  })
+
   it('accepts CSS-style layout aliases', async () => {
     const g = makeSceneGraph()
     const [result] = await renderJSX(

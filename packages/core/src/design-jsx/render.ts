@@ -5,7 +5,18 @@ import type { SceneGraph } from '@open-pencil/scene-graph'
 import { DESIGN_JSX_SUPPORTED_PROPERTIES } from '#core/design-jsx/schema'
 import type { RenderOptions as RenderJSXOptions } from '#core/design-jsx/types'
 
-import { backgroundBlur, dropShadow, foregroundBlur, innerShadow, layerBlur } from './effects'
+import {
+  backgroundBlur,
+  BLUR_EFFECT_OPTIONS,
+  dropShadow,
+  foregroundBlur,
+  innerShadow,
+  layerBlur,
+  SHADOW_EFFECT_OPTIONS,
+  unknownEffectOptions,
+  type BlurEffectOptions,
+  type ShadowEffectOptions
+} from './effects'
 import * as React from './mini-react'
 import {
   angularGradient,
@@ -52,7 +63,33 @@ function collectUnsupportedPropWarnings(tree: TreeNode, warnings: string[]): voi
   }
 }
 
-export function buildComponent(jsxString: string): React.ComponentType {
+/** Effect helpers that report options they ignore, so a misspelled option is not silent. */
+function checkedEffectHelpers(warnings: string[]) {
+  const check = (helper: string, options: unknown, known: readonly string[]) => {
+    for (const key of unknownEffectOptions(options, known)) {
+      const warning = `Unsupported option "${key}" in ${helper}() is ignored. Supported options: ${known.join(', ')}.`
+      if (!warnings.includes(warning)) warnings.push(warning)
+    }
+  }
+  const shadow = (helper: string, build: typeof dropShadow) => (options?: ShadowEffectOptions) => {
+    check(helper, options, SHADOW_EFFECT_OPTIONS)
+    return build(options)
+  }
+  const blur =
+    (helper: string, build: typeof layerBlur) => (radiusOrOptions?: number | BlurEffectOptions) => {
+      check(helper, radiusOrOptions, BLUR_EFFECT_OPTIONS)
+      return build(radiusOrOptions)
+    }
+  return {
+    dropShadow: shadow('dropShadow', dropShadow),
+    innerShadow: shadow('innerShadow', innerShadow),
+    layerBlur: blur('layerBlur', layerBlur),
+    backgroundBlur: blur('backgroundBlur', backgroundBlur),
+    foregroundBlur: blur('foregroundBlur', foregroundBlur)
+  }
+}
+
+export function buildComponent(jsxString: string, warnings: string[] = []): React.ComponentType {
   const trimmed = stripHTMLComments(jsxString).trim()
 
   const aliases = `
@@ -99,11 +136,7 @@ export function buildComponent(jsxString: string): React.ComponentType {
 
   // eslint-disable-next-line typescript-eslint/no-implied-eval -- sucrase output must be evaluated at runtime
   return new Function('React', '__helpers', code)(React, {
-    backgroundBlur,
-    dropShadow,
-    foregroundBlur,
-    innerShadow,
-    layerBlur,
+    ...checkedEffectHelpers(warnings),
     angularGradient,
     diamondGradient,
     gradient,
@@ -122,7 +155,8 @@ export async function renderJSX(
   jsxString: string,
   options?: RenderJSXOptions
 ): Promise<RenderResult[]> {
-  const Component = buildComponent(jsxString)
+  const helperWarnings: string[] = []
+  const Component = buildComponent(jsxString, helperWarnings)
   const element = React.createElement(Component, null)
   const tree = resolveToTree(element)
 
@@ -130,7 +164,7 @@ export async function renderJSX(
     throw new Error('JSX must return a Figma element (Frame, Text, etc)')
   }
 
-  const warnings = unsupportedPropWarnings(tree)
+  const warnings = [...unsupportedPropWarnings(tree), ...helperWarnings]
 
   if (tree.type === '' && tree.children.length > 0) {
     const results: RenderResult[] = []

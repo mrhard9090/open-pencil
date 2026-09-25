@@ -12,6 +12,8 @@ export interface ShadowEffectOptions {
   y?: number
   offset?: Vector
   radius?: number
+  /** Same as `radius`, the name the `shadow` shorthand, the `blur` prop and CSS use. */
+  blur?: number
   spread?: number
   visible?: boolean
   blendMode?: BlendMode
@@ -20,7 +22,30 @@ export interface ShadowEffectOptions {
 
 export interface BlurEffectOptions {
   radius?: number
+  /** Same as `radius`. */
+  blur?: number
   visible?: boolean
+}
+
+export const SHADOW_EFFECT_OPTIONS = [
+  'color',
+  'x',
+  'y',
+  'offset',
+  'radius',
+  'blur',
+  'spread',
+  'visible',
+  'blendMode',
+  'showShadowBehindNode'
+] as const
+
+export const BLUR_EFFECT_OPTIONS = ['radius', 'blur', 'visible'] as const
+
+/** Names of the options passed to an effect helper that it does not use. */
+export function unknownEffectOptions(options: unknown, known: readonly string[]): string[] {
+  if (typeof options !== 'object' || options === null) return []
+  return Object.keys(options).filter((key) => !known.includes(key))
 }
 
 function toColor(color: EffectColor | undefined): Color {
@@ -33,7 +58,7 @@ function shadowEffect(type: 'DROP_SHADOW' | 'INNER_SHADOW', options: ShadowEffec
     type,
     color: toColor(options.color ?? 'rgba(0, 0, 0, 0.25)'),
     offset: options.offset ?? { x: options.x ?? 0, y: options.y ?? 4 },
-    radius: options.radius ?? 8,
+    radius: options.radius ?? options.blur ?? 8,
     spread: options.spread ?? 0,
     visible: options.visible ?? true,
     blendMode: options.blendMode,
@@ -51,7 +76,7 @@ function blurEffect(
     type,
     color: { ...TRANSPARENT },
     offset: { x: 0, y: 0 },
-    radius: options.radius ?? 8,
+    radius: options.radius ?? options.blur ?? 8,
     spread: 0,
     visible: options.visible ?? true
   }
