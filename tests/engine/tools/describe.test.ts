@@ -76,15 +76,16 @@ function hex(value: string): Color {
   return { r: channel(1), g: channel(3), b: channel(5), a: 1 }
 }
 
-function solid(color: string): Fill {
-  return { type: 'SOLID', color: hex(color), opacity: 1, visible: true }
+function solid(color: string, opacity = 1): Fill {
+  return { type: 'SOLID', color: hex(color), opacity, visible: true }
 }
 
 function describeTextOnBackground(
   textColor: string,
   backgroundColor: string,
   fontSize: number,
-  fontWeight = 400
+  fontWeight = 400,
+  textOpacity = 1
 ): DescribedIssue[] {
   const { figma, graph } = setupToolTest()
   const frame = figma.createFrame()
@@ -95,7 +96,7 @@ function describeTextOnBackground(
   const label = figma.createText()
   label.name = 'Label'
   frame.appendChild(label)
-  graph.updateNode(label.id, { fills: [solid(textColor)], fontSize, fontWeight })
+  graph.updateNode(label.id, { fills: [solid(textColor, textOpacity)], fontSize, fontWeight })
 
   const result = getTool('describe').execute(figma, { id: frame.id }) as ToolResult
   const issues = (result.issues ?? []) as DescribedIssue[]
@@ -115,6 +116,13 @@ describe('describe text contrast', () => {
       message: '"Label" contrast 3.03:1 is below WCAG AA 4.5:1 (#949494 on #FFFFFF)',
       severity: 'error'
     })
+  })
+
+  test('measures a translucent text fill as blended with the background', () => {
+    expect(describeTextOnBackground('#000000', '#FFFFFF', 14)).toEqual([])
+    expect(describeTextOnBackground('#000000', '#FFFFFF', 14, 400, 0.4)[0]?.message).toContain(
+      'contrast 2.84:1 is below WCAG AA 4.5:1'
+    )
   })
 
   test('uses the 3:1 threshold for large text', () => {

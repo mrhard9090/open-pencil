@@ -1,7 +1,7 @@
 import { wcagContrast } from 'culori'
 import { sumBy } from 'es-toolkit/math'
 
-import type { SceneGraph, SceneNode } from '@open-pencil/scene-graph'
+import type { Fill, SceneGraph, SceneNode } from '@open-pencil/scene-graph'
 import type { Color } from '@open-pencil/scene-graph/primitives'
 
 import { colorToHex } from '#core/color'
@@ -17,6 +17,23 @@ function contrastRatio(a: Color, b: Color): number {
     { mode: 'rgb', r: a.r, g: a.g, b: a.b },
     { mode: 'rgb', r: b.r, g: b.g, b: b.b }
   )
+}
+
+// A translucent text fill is seen blended with the background behind it.
+function blendOver(fill: Fill, background: Color): Color {
+  const alpha = fill.opacity * fill.color.a
+  const mix = (top: number, bottom: number) => top * alpha + bottom * (1 - alpha)
+  return {
+    r: mix(fill.color.r, background.r),
+    g: mix(fill.color.g, background.g),
+    b: mix(fill.color.b, background.b),
+    a: 1
+  }
+}
+
+// Round down so a failing ratio such as 4.499 is not shown as 4.50.
+function formatRatio(ratio: number): string {
+  return (Math.floor(ratio * 100) / 100).toFixed(2)
 }
 
 // WCAG large text is at least 18pt, or 14pt bold (1pt = 4/3px).
@@ -224,11 +241,11 @@ function checkTextVisibility(ctx: LayoutContext): void {
     }
     const bg = findAncestorBackground(child, graph)
     if (!bg) continue
-    const ratio = contrastRatio(textFill.color, bg)
+    const ratio = contrastRatio(blendOver(textFill, bg), bg)
     const required = isLargeText(child) ? WCAG_AA_LARGE_TEXT_CONTRAST : WCAG_AA_CONTRAST
     if (ratio < required) {
       issues.push({
-        message: `"${child.name || child.text.slice(0, 20) || 'Text'}" contrast ${ratio.toFixed(2)}:1 is below WCAG AA ${required}:1 (${colorToHex(textFill.color)} on ${colorToHex(bg)})`,
+        message: `"${child.name || child.text.slice(0, 20) || 'Text'}" contrast ${formatRatio(ratio)}:1 is below WCAG AA ${required}:1 (${colorToHex(textFill.color)} on ${colorToHex(bg)})`,
         suggestion: 'Increase contrast between text and background'
       })
     }
