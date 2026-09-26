@@ -27,27 +27,6 @@ export interface BlurEffectOptions {
   visible?: boolean
 }
 
-export const SHADOW_EFFECT_OPTIONS = [
-  'color',
-  'x',
-  'y',
-  'offset',
-  'radius',
-  'blur',
-  'spread',
-  'visible',
-  'blendMode',
-  'showShadowBehindNode'
-] as const
-
-export const BLUR_EFFECT_OPTIONS = ['radius', 'blur', 'visible'] as const
-
-/** Names of the options passed to an effect helper that it does not use. */
-export function unknownEffectOptions(options: unknown, known: readonly string[]): string[] {
-  if (typeof options !== 'object' || options === null) return []
-  return Object.keys(options).filter((key) => !known.includes(key))
-}
-
 function toColor(color: EffectColor | undefined): Color {
   if (color === undefined) return { ...TRANSPARENT }
   return typeof color === 'string' ? parseColor(color) : color

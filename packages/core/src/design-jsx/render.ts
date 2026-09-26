@@ -1,3 +1,4 @@
+import { uniq } from 'es-toolkit/array'
 import { transform } from 'sucrase'
 
 import type { SceneGraph } from '@open-pencil/scene-graph'
@@ -5,27 +6,8 @@ import type { SceneGraph } from '@open-pencil/scene-graph'
 import { DESIGN_JSX_SUPPORTED_PROPERTIES } from '#core/design-jsx/schema'
 import type { RenderOptions as RenderJSXOptions } from '#core/design-jsx/types'
 
-import {
-  backgroundBlur,
-  BLUR_EFFECT_OPTIONS,
-  dropShadow,
-  foregroundBlur,
-  innerShadow,
-  layerBlur,
-  SHADOW_EFFECT_OPTIONS,
-  unknownEffectOptions,
-  type BlurEffectOptions,
-  type ShadowEffectOptions
-} from './effects'
+import { designJSXHelpers } from './helpers'
 import * as React from './mini-react'
-import {
-  angularGradient,
-  diamondGradient,
-  gradient,
-  linearGradient,
-  radialGradient,
-  solid
-} from './paints'
 import { renderTree, type RenderResult } from './renderer'
 import { isTreeNode, resolveToTree, type TreeNode } from './tree'
 
@@ -60,32 +42,6 @@ function collectUnsupportedPropWarnings(tree: TreeNode, warnings: string[]): voi
 
   for (const child of tree.children) {
     if (isTreeNode(child)) collectUnsupportedPropWarnings(child, warnings)
-  }
-}
-
-/** Effect helpers that report options they ignore, so a misspelled option is not silent. */
-function checkedEffectHelpers(warnings: string[]) {
-  const check = (helper: string, options: unknown, known: readonly string[]) => {
-    for (const key of unknownEffectOptions(options, known)) {
-      const warning = `Unsupported option "${key}" in ${helper}() is ignored. Supported options: ${known.join(', ')}.`
-      if (!warnings.includes(warning)) warnings.push(warning)
-    }
-  }
-  const shadow = (helper: string, build: typeof dropShadow) => (options?: ShadowEffectOptions) => {
-    check(helper, options, SHADOW_EFFECT_OPTIONS)
-    return build(options)
-  }
-  const blur =
-    (helper: string, build: typeof layerBlur) => (radiusOrOptions?: number | BlurEffectOptions) => {
-      check(helper, radiusOrOptions, BLUR_EFFECT_OPTIONS)
-      return build(radiusOrOptions)
-    }
-  return {
-    dropShadow: shadow('dropShadow', dropShadow),
-    innerShadow: shadow('innerShadow', innerShadow),
-    layerBlur: blur('layerBlur', layerBlur),
-    backgroundBlur: blur('backgroundBlur', backgroundBlur),
-    foregroundBlur: blur('foregroundBlur', foregroundBlur)
   }
 }
 
@@ -135,15 +91,10 @@ export function buildComponent(jsxString: string, warnings: string[] = []): Reac
   }
 
   // eslint-disable-next-line typescript-eslint/no-implied-eval -- sucrase output must be evaluated at runtime
-  return new Function('React', '__helpers', code)(React, {
-    ...checkedEffectHelpers(warnings),
-    angularGradient,
-    diamondGradient,
-    gradient,
-    linearGradient,
-    radialGradient,
-    solid
-  }) as React.ComponentType
+  return new Function('React', '__helpers', code)(
+    React,
+    designJSXHelpers(warnings)
+  ) as React.ComponentType
 }
 
 /**
@@ -164,7 +115,8 @@ export async function renderJSX(
     throw new Error('JSX must return a Figma element (Frame, Text, etc)')
   }
 
-  const warnings = [...unsupportedPropWarnings(tree), ...helperWarnings]
+  // A helper called in a loop reports each ignored option once.
+  const warnings = uniq([...unsupportedPropWarnings(tree), ...helperWarnings])
 
   if (tree.type === '' && tree.children.length > 0) {
     const results: RenderResult[] = []

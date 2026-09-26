@@ -592,6 +592,29 @@ describe('renderJSX (string → scene graph)', () => {
     ])
   })
 
+  it('warns about paint helper options it ignores', async () => {
+    const g = makeSceneGraph()
+    const [result] = await renderJSX(
+      g,
+      `<Frame w={100} h={60} fills={[solid('#FF0000', { opactiy: 0.5 }), linearGradient([['#000', 0], ['#FFF', 1]], { angle: 90 })]} />`
+    )
+
+    expect(result.warnings).toEqual([
+      'Unsupported option "opactiy" in solid() is ignored. Supported options: opacity, visible, blendMode.',
+      'Unsupported option "angle" in linearGradient() is ignored. Supported options: opacity, visible, blendMode, transform.'
+    ])
+  })
+
+  it('only checks options objects passed to helpers', async () => {
+    const g = makeSceneGraph()
+    const [result] = await renderJSX(
+      g,
+      `<Frame w={100} h={60} effects={[layerBlur(4)]} fills={[solid('#FF0000')]} />`
+    )
+
+    expect(result.warnings).toBeUndefined()
+  })
+
   it('accepts CSS-style layout aliases', async () => {
     const g = makeSceneGraph()
     const [result] = await renderJSX(
