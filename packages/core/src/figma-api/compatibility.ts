@@ -28,7 +28,6 @@ export type SupportedPluginAPI = Pick<
   | 'createVector'
   | 'exclude'
   | 'flatten'
-  | 'getNodeByIdAsync'
   | 'group'
   | 'intersect'
   | 'subtract'
