@@ -28,6 +28,7 @@ export type SupportedPluginAPI = Pick<
   | 'createVector'
   | 'exclude'
   | 'flatten'
+  | 'getNodeByIdAsync'
   | 'group'
   | 'intersect'
   | 'subtract'
@@ -70,6 +71,7 @@ type InstancePropertySurfaceMatch = Expect<
       | 'setProperties'
       | 'isExposedInstance'
       | 'exposedInstances'
+      | 'getMainComponentAsync'
     >,
     Pick<
       InstanceNode,
@@ -78,6 +80,7 @@ type InstancePropertySurfaceMatch = Expect<
       | 'setProperties'
       | 'isExposedInstance'
       | 'exposedInstances'
+      | 'getMainComponentAsync'
     >
   >
 >
