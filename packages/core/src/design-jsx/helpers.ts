@@ -30,7 +30,6 @@ const SHADOW_OPTIONS = {
   y: true,
   offset: true,
   radius: true,
-  blur: true,
   spread: true,
   visible: true,
   blendMode: true,
@@ -39,7 +38,6 @@ const SHADOW_OPTIONS = {
 
 const BLUR_OPTIONS = {
   radius: true,
-  blur: true,
   visible: true
 } satisfies OptionKeys<BlurEffectOptions>
 
@@ -53,6 +51,18 @@ const GRADIENT_OPTIONS = {
   ...SOLID_OPTIONS,
   transform: true
 } satisfies OptionKeys<GradientPaintOptions>
+
+/** Option names people reach for that the helpers spell as Figma's effects do. */
+const FIGMA_OPTION_NAMES: Record<string, string> = { blur: 'radius' }
+
+function unsupportedOptionWarning(name: string, key: string, known: string[]): string {
+  const figmaName = FIGMA_OPTION_NAMES[key]
+  const hint =
+    figmaName && known.includes(figmaName)
+      ? `Use "${figmaName}", the name Figma uses.`
+      : `Supported options: ${known.join(', ')}.`
+  return `Unsupported option "${key}" in ${name}() is ignored. ${hint}`
+}
 
 /**
  * Wrap a helper so each option it ignores adds a warning instead of vanishing, which is
@@ -70,9 +80,7 @@ function checked<Args extends unknown[], Result>(
     const passed = args[optionsAt]
     if (isPlainObject(passed)) {
       for (const key of difference(Object.keys(passed), known)) {
-        warnings.push(
-          `Unsupported option "${key}" in ${name}() is ignored. Supported options: ${known.join(', ')}.`
-        )
+        warnings.push(unsupportedOptionWarning(name, key, known))
       }
     }
     return helper(...args)

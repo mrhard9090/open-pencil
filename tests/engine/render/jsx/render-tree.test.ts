@@ -567,16 +567,19 @@ describe('renderJSX (string → scene graph)', () => {
     expect(result.warnings).toEqual(['Unsupported prop "mt" on <frame> is ignored.'])
   })
 
-  it('accepts blur as the radius of effect helpers', async () => {
+  it('points blur in effect helpers at radius, the name Figma uses', async () => {
     const g = makeSceneGraph()
     const [result] = await renderJSX(
       g,
-      `<Frame w={100} h={60} effects={[dropShadow({ x: 4, y: 4, blur: 12 }), innerShadow({ blur: 6 }), layerBlur({ blur: 3 })]} />`
+      `<Frame w={100} h={60} effects={[dropShadow({ x: 4, y: 4, blur: 12 }), layerBlur({ blur: 3 })]} />`
     )
     const node = getNodeOrThrow(g, result.id)
 
-    expect(node.effects.map((effect) => effect.radius)).toEqual([12, 6, 3])
-    expect(result.warnings).toBeUndefined()
+    expect(node.effects.map((effect) => effect.radius)).toEqual([8, 8])
+    expect(result.warnings).toEqual([
+      'Unsupported option "blur" in dropShadow() is ignored. Use "radius", the name Figma uses.',
+      'Unsupported option "blur" in layerBlur() is ignored. Use "radius", the name Figma uses.'
+    ])
   })
 
   it('warns about effect helper options it ignores', async () => {
@@ -587,8 +590,8 @@ describe('renderJSX (string → scene graph)', () => {
     )
 
     expect(result.warnings).toEqual([
-      'Unsupported option "colour" in dropShadow() is ignored. Supported options: color, x, y, offset, radius, blur, spread, visible, blendMode, showShadowBehindNode.',
-      'Unsupported option "amount" in backgroundBlur() is ignored. Supported options: radius, blur, visible.'
+      'Unsupported option "colour" in dropShadow() is ignored. Supported options: color, x, y, offset, radius, spread, visible, blendMode, showShadowBehindNode.',
+      'Unsupported option "amount" in backgroundBlur() is ignored. Supported options: radius, visible.'
     ])
   })
 
