@@ -21,8 +21,16 @@ function formatRatio(ratio: number): string {
 }
 
 // WCAG large text is at least 18pt, or 14pt bold (1pt = 4/3px).
+function isLargeSize(fontSize: number, fontWeight: number): boolean {
+  return fontSize >= 24 || (fontSize >= 56 / 3 && fontWeight >= 700)
+}
+
+// Text qualifies only when every range does: the base style and each style run's own size and weight.
 function isLargeText(node: SceneNode): boolean {
-  return node.fontSize >= 24 || (node.fontSize >= 56 / 3 && node.fontWeight >= 700)
+  if (!isLargeSize(node.fontSize, node.fontWeight)) return false
+  return node.styleRuns.every(({ style }) =>
+    isLargeSize(style.fontSize ?? node.fontSize, style.fontWeight ?? node.fontWeight)
+  )
 }
 
 interface LayoutContext {

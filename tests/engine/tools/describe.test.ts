@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 
-import type { Color, Fill, Stroke } from '@open-pencil/scene-graph'
+import type { Color, Fill, SceneNode, Stroke } from '@open-pencil/scene-graph'
 
 import { expectDefined } from '#tests/helpers/assert'
 import { getTool, setupToolTest, type ToolResult } from '#tests/helpers/tools'
@@ -86,7 +86,7 @@ function describeTextOnBackground(
   fontSize: number,
   fontWeight = 400,
   textOpacity = 1,
-  options: { opacity?: number; boundColor?: string } = {}
+  options: { opacity?: number; boundColor?: string; styleRuns?: SceneNode['styleRuns'] } = {}
 ): DescribedIssue[] {
   const { figma, graph } = setupToolTest()
   const frame = figma.createFrame()
@@ -102,7 +102,8 @@ function describeTextOnBackground(
     fontSize,
     fontWeight,
     opacity: options.opacity ?? 1,
-    boundVariables: options.boundColor ? { 'fills/0/color': options.boundColor } : {}
+    boundVariables: options.boundColor ? { 'fills/0/color': options.boundColor } : {},
+    styleRuns: options.styleRuns ?? []
   })
 
   const result = getTool('describe').execute(figma, { id: frame.id }) as ToolResult
@@ -150,5 +151,14 @@ describe('describe text contrast', () => {
     expect(
       describeTextOnBackground('#949494', '#FFFFFF', 14, 400, 1, { boundColor: 'v1' })
     ).toEqual([])
+  })
+
+  test('applies the normal threshold when a style run makes part of large text small', () => {
+    const smallRun = { styleRuns: [{ start: 0, length: 4, style: { fontSize: 14 } }] }
+    expect(
+      describeTextOnBackground('#949494', '#FFFFFF', 24, 400, 1, smallRun)[0]?.message
+    ).toContain('contrast 3.03:1 is below WCAG AA 4.5:1')
+    const largeRun = { styleRuns: [{ start: 0, length: 4, style: { fontSize: 32 } }] }
+    expect(describeTextOnBackground('#949494', '#FFFFFF', 24, 400, 1, largeRun)).toEqual([])
   })
 })
