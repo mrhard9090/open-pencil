@@ -1,11 +1,17 @@
 import { describe, expect, test } from 'bun:test'
 
-import { fractionalPosition, orderKeyBetween, siblingOrderKeys } from '@open-pencil/fig/node-change'
+import {
+  fractionalPosition,
+  orderKeyBetween,
+  sceneNodeToKiwi,
+  siblingOrderKeys
+} from '@open-pencil/fig/node-change'
 import { SceneGraph } from '@open-pencil/scene-graph'
 
-import { sceneNodeToKiwi } from '#core/kiwi/fig/node-change/serialize'
-
-import { expectDefined } from '#tests/helpers/assert'
+function requireKey(key: string | null, label: string): string {
+  if (key === null) throw new Error(`expected a key ${label}`)
+  return key
+}
 
 function expectStrictlyIncreasing(keys: string[]) {
   for (let i = 1; i < keys.length; i++) expect(keys[i] > keys[i - 1]).toBe(true)
@@ -20,7 +26,7 @@ describe('orderKeyBetween', () => {
       ['a', 'b'],
       [null, null]
     ] as const) {
-      const key = expectDefined(orderKeyBetween(lo, hi), `key between ${lo} and ${hi}`)
+      const key = requireKey(orderKeyBetween(lo, hi), `between ${lo} and ${hi}`)
       if (lo !== null) expect(key > lo).toBe(true)
       if (hi !== null) expect(key < hi).toBe(true)
     }
@@ -62,6 +68,23 @@ describe('siblingOrderKeys', () => {
   test('re-keys imported siblings that were moved out of order', () => {
     const keys = siblingOrderKeys(['#', '!', '"'])
     expect(keys[0]).toBe('#')
+    expectStrictlyIncreasing(keys)
+  })
+})
+
+describe('Figma keys containing spaces', () => {
+  // Real Figma files use keys such as '&RQTOt7CO O'; the space sorts below the printable range.
+  test('finds a key between a key and its space-extended successor', () => {
+    const key = requireKey(orderKeyBetween('&RQTOt7CO', '&RQTOt7CO O'), 'before the space key')
+    expect(key > '&RQTOt7CO' && key < '&RQTOt7CO O').toBe(true)
+  })
+
+  test('keeps space-bearing imported keys and fits new layers between them', () => {
+    const keys = siblingOrderKeys(['&RQTOt7CO', null, '&RQTOt7CO O', '&RQTOt7CO f', null])
+    expect(keys[0]).toBe('&RQTOt7CO')
+    expect(keys[2]).toBe('&RQTOt7CO O')
+    expect(keys[3]).toBe('&RQTOt7CO f')
+    expect(new Set(keys).size).toBe(keys.length)
     expectStrictlyIncreasing(keys)
   })
 })
