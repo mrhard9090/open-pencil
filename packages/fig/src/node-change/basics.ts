@@ -70,7 +70,13 @@ export function orderKeyBetween(lo: string | null, hi: string | null): string | 
       key += String.fromCharCode(a)
       continue
     }
-    if (b - a > 1) return key + String.fromCharCode(Math.floor((a + b) / 2))
+    if (b - a > 1) {
+      const candidate = key + String.fromCharCode(Math.floor((a + b) / 2))
+      if ((lo === null || candidate > lo) && (hi === null || candidate < hi)) {
+        return candidate
+      }
+      return null
+    }
     if (a < ORDER_KEY_MIN) return null
     // Keep `a` here; every later character is then below `high`.
     key += String.fromCharCode(a)

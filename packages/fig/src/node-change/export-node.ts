@@ -26,7 +26,7 @@ import {
 
 export type KiwiNodeChange = NodeChange & Record<string, unknown>
 
-const siblingOrderKeyCache = new WeakMap<object, Map<string, string[]>>()
+const siblingOrderKeyCache = new WeakMap<object, Map<string, { ids: string[]; keys: string[] }>>()
 
 /**
  * The node's `parentIndex.position`: its imported key when that still orders it after its
@@ -39,23 +39,25 @@ function exportOrderKey(
   childIndex: number
 ): string {
   const parentId = node.parentId
-  const siblings = parentId
-    ? context.graph.getChildren(parentId).filter((child) => !child.internalOnly)
-    : []
-  if (!parentId || siblings[childIndex]?.id !== node.id) {
-    return node.source.orderKey ?? context.fractionalPosition(childIndex)
-  }
+  if (!parentId) return node.source.orderKey ?? context.fractionalPosition(childIndex)
   let cache = siblingOrderKeyCache.get(context)
   if (!cache) {
     cache = new Map()
     siblingOrderKeyCache.set(context, cache)
   }
-  let keys = cache.get(parentId)
-  if (!keys) {
-    keys = siblingOrderKeys(siblings.map((sibling) => sibling.source.orderKey))
-    cache.set(parentId, keys)
+  let entry = cache.get(parentId)
+  if (!entry) {
+    const siblings = context.graph.getChildren(parentId).filter((child) => !child.internalOnly)
+    entry = {
+      ids: siblings.map((sibling) => sibling.id),
+      keys: siblingOrderKeys(siblings.map((sibling) => sibling.source.orderKey))
+    }
+    cache.set(parentId, entry)
   }
-  return keys[childIndex]
+  if (entry.ids[childIndex] !== node.id) {
+    return node.source.orderKey ?? context.fractionalPosition(childIndex)
+  }
+  return entry.keys[childIndex]
 }
 
 type KiwiBooleanOperation = NonNullable<NodeChange['booleanOperation']>
