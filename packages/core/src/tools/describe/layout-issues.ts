@@ -1,8 +1,7 @@
-import { wcagContrast } from 'culori'
 import { sumBy } from 'es-toolkit/math'
 
 import type { Fill, SceneGraph, SceneNode } from '@open-pencil/scene-graph'
-import { colorToHex } from '@open-pencil/scene-graph/color'
+import { colorToHex, compositeOver, contrastRatio } from '@open-pencil/scene-graph/color'
 import type { Color } from '@open-pencil/scene-graph/primitives'
 
 import type { DescribeIssue } from './issues'
@@ -11,23 +10,9 @@ import { CONTAINER_TYPES, findAncestorBackground } from './shared'
 const WCAG_AA_CONTRAST = 4.5
 const WCAG_AA_LARGE_TEXT_CONTRAST = 3
 
-function contrastRatio(a: Color, b: Color): number {
-  return wcagContrast(
-    { mode: 'rgb', r: a.r, g: a.g, b: a.b },
-    { mode: 'rgb', r: b.r, g: b.g, b: b.b }
-  )
-}
-
 // A translucent text fill is seen blended with the background behind it.
 function blendOver(fill: Fill, background: Color): Color {
-  const alpha = fill.opacity * fill.color.a
-  const mix = (top: number, bottom: number) => top * alpha + bottom * (1 - alpha)
-  return {
-    r: mix(fill.color.r, background.r),
-    g: mix(fill.color.g, background.g),
-    b: mix(fill.color.b, background.b),
-    a: 1
-  }
+  return compositeOver(fill.color, background, fill.opacity * fill.color.a)
 }
 
 // Round down so a failing ratio such as 4.499 is not shown as 4.50.
