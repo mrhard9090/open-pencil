@@ -248,6 +248,7 @@ export class FigmaNodeProxy {
   detachInstance(): FigmaNodeProxy {
     const n = this._raw()
     if (n.type !== 'INSTANCE') throw new Error('detachInstance() can only be called on instances')
+    assertNodeEditable(this[INTERNAL_GRAPH], this[INTERNAL_ID])
     this[INTERNAL_GRAPH].detachInstance(n.id)
     return this[INTERNAL_API].wrapNode(n.id)
   }
