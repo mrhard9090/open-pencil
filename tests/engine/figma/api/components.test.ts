@@ -86,4 +86,15 @@ describe('components', () => {
       'detachInstance() can only be called on instances'
     )
   })
+
+  test('async lookups resolve like their synchronous forms', async () => {
+    const api = createAPI()
+    const component = api.createComponent()
+    const instance = component.createInstance()
+
+    expect((await api.getNodeByIdAsync(instance.id))?.id).toBe(instance.id)
+    expect(await api.getNodeByIdAsync('0:404')).toBeNull()
+    expect((await instance.getMainComponentAsync())?.id).toBe(component.id)
+    expect(await component.getMainComponentAsync()).toBeNull()
+  })
 })
