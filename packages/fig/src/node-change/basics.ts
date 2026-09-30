@@ -52,36 +52,31 @@ export function fractionalPosition(index: number): string {
   return String.fromCharCode(TILDE).repeat(numTildes) + lastChar
 }
 
-const ORDER_KEY_MIN = 33
-const ORDER_KEY_MAX = 126
+const ORDER_KEY_MIN = 33 // '!'
+const ORDER_KEY_MAX = 126 // '~'
+const ORDER_KEY_MID = 'O'
 
 /**
  * A printable key strictly between `lo` and `hi` (either may be open), or null when none
- * exists because `hi` is already the smallest key after `lo`.
+ * exists. Splits at the first character where they differ when a character fits between;
+ * otherwise keeps that character and recurses into the remainder, relying on string order.
  */
 export function orderKeyBetween(lo: string | null, hi: string | null): string | null {
+  if (lo !== null && hi !== null && lo >= hi) return null
   const low = lo ?? ''
-  let high = hi
-  let key = ''
-  for (let i = 0; ; i++) {
-    const a = i < low.length ? low.charCodeAt(i) : ORDER_KEY_MIN - 1
-    const b = high !== null && i < high.length ? high.charCodeAt(i) : ORDER_KEY_MAX + 1
-    if (a === b) {
-      key += String.fromCharCode(a)
-      continue
-    }
-    if (b - a > 1) {
-      const candidate = key + String.fromCharCode(Math.floor((a + b) / 2))
-      if ((lo === null || candidate > lo) && (hi === null || candidate < hi)) {
-        return candidate
-      }
-      return null
-    }
-    if (a < ORDER_KEY_MIN) return null
-    // Keep `a` here; every later character is then below `high`.
-    key += String.fromCharCode(a)
-    high = null
+  let i = 0
+  while (hi !== null && i < low.length && i < hi.length && low[i] === hi[i]) i++
+  const a = i < low.length ? low.charCodeAt(i) : ORDER_KEY_MIN - 1
+  const b = hi !== null && i < hi.length ? hi.charCodeAt(i) : ORDER_KEY_MAX + 1
+  if (b - a > 1) return low.slice(0, i) + String.fromCharCode(Math.floor((a + b) / 2))
+  // Keep lo's character: anything above the rest of lo then sorts below hi.
+  if (i < low.length) {
+    return low.slice(0, i + 1) + (orderKeyBetween(low.slice(i + 1), null) ?? ORDER_KEY_MID)
   }
+  // lo is a prefix of hi whose next character can't be lowered: keep it and go below the rest.
+  const rest = hi?.slice(i + 1) ?? ''
+  if (!hi || rest === '') return null
+  return hi.slice(0, i + 1) + (orderKeyBetween(null, rest) ?? '')
 }
 
 /**

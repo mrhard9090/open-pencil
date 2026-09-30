@@ -32,6 +32,22 @@ describe('orderKeyBetween', () => {
     }
   })
 
+  test('stops at a longer prefix of hi when no character can be lowered', () => {
+    expect(orderKeyBetween('a', 'a!!')).toBe('a!')
+    expect(orderKeyBetween(null, '!!')).toBe('!')
+    expect(orderKeyBetween('a', 'a!')).toBeNull()
+  })
+
+  test('keeps keys short when many keys are appended one after another', () => {
+    let lo = '$'
+    for (let n = 0; n < 500; n++) {
+      const key = requireKey(orderKeyBetween(lo, null), 'after ' + lo)
+      expect(key > lo).toBe(true)
+      lo = key
+    }
+    expect(lo.length).toBeLessThan(100)
+  })
+
   test('returns null when nothing sorts before the smallest key', () => {
     expect(orderKeyBetween(null, '!')).toBeNull()
   })
