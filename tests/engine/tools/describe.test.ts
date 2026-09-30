@@ -85,7 +85,8 @@ function describeTextOnBackground(
   backgroundColor: string,
   fontSize: number,
   fontWeight = 400,
-  textOpacity = 1
+  textOpacity = 1,
+  options: { opacity?: number; boundColor?: string } = {}
 ): DescribedIssue[] {
   const { figma, graph } = setupToolTest()
   const frame = figma.createFrame()
@@ -96,7 +97,13 @@ function describeTextOnBackground(
   const label = figma.createText()
   label.name = 'Label'
   frame.appendChild(label)
-  graph.updateNode(label.id, { fills: [solid(textColor, textOpacity)], fontSize, fontWeight })
+  graph.updateNode(label.id, {
+    fills: [solid(textColor, textOpacity)],
+    fontSize,
+    fontWeight,
+    opacity: options.opacity ?? 1,
+    boundVariables: options.boundColor ? { 'fills/0/color': options.boundColor } : {}
+  })
 
   const result = getTool('describe').execute(figma, { id: frame.id }) as ToolResult
   const issues = (result.issues ?? []) as DescribedIssue[]
@@ -131,5 +138,17 @@ describe('describe text contrast', () => {
     expect(describeTextOnBackground('#B0B0B0', '#FFFFFF', 24)[0]?.message).toContain(
       'below WCAG AA 3:1'
     )
+  })
+
+  test('measures text faded by its own opacity', () => {
+    expect(
+      describeTextOnBackground('#000000', '#FFFFFF', 14, 400, 1, { opacity: 0.4 })[0]?.message
+    ).toContain('contrast 2.84:1 is below WCAG AA 4.5:1')
+  })
+
+  test('skips text whose fill color is bound to a variable', () => {
+    expect(
+      describeTextOnBackground('#949494', '#FFFFFF', 14, 400, 1, { boundColor: 'v1' })
+    ).toEqual([])
   })
 })

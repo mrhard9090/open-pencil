@@ -10,9 +10,9 @@ import { CONTAINER_TYPES, findAncestorBackground } from './shared'
 const WCAG_AA_CONTRAST = 4.5
 const WCAG_AA_LARGE_TEXT_CONTRAST = 3
 
-// A translucent text fill is seen blended with the background behind it.
-function blendOver(fill: Fill, background: Color): Color {
-  return compositeOver(fill.color, background, fill.opacity * fill.color.a)
+// Translucent text, through its fill or the node's own opacity, is seen blended with the background.
+function blendOver(fill: Fill, nodeOpacity: number, background: Color): Color {
+  return compositeOver(fill.color, background, fill.opacity * fill.color.a * nodeOpacity)
 }
 
 // Round down so a failing ratio such as 4.499 is not shown as 4.50.
@@ -215,7 +215,8 @@ function checkTextVisibility(ctx: LayoutContext): void {
   for (const childId of node.childIds) {
     const child = graph.getNode(childId)
     if (!child?.visible || child.type !== 'TEXT') continue
-    const textFill = child.fills.find((f) => f.visible && f.type === 'SOLID')
+    const textFillIndex = child.fills.findIndex((f) => f.visible && f.type === 'SOLID')
+    const textFill = child.fills[textFillIndex] as Fill | undefined
     if (!textFill) {
       issues.push({
         message: `"${child.name || child.text.slice(0, 20) || 'Text'}" has no color — invisible`,
@@ -223,9 +224,12 @@ function checkTextVisibility(ctx: LayoutContext): void {
       })
       continue
     }
+    // A variable-bound color depends on the active mode, so its static value proves nothing;
+    // the color-contrast lint rule skips it for the same reason.
+    if (child.boundVariables[`fills/${textFillIndex}/color`]) continue
     const bg = findAncestorBackground(child, graph)
     if (!bg) continue
-    const ratio = contrastRatio(blendOver(textFill, bg), bg)
+    const ratio = contrastRatio(blendOver(textFill, child.opacity, bg), bg)
     const required = isLargeText(child) ? WCAG_AA_LARGE_TEXT_CONTRAST : WCAG_AA_CONTRAST
     if (ratio < required) {
       issues.push({
