@@ -54,6 +54,28 @@ describe('library definition capabilities', () => {
     )
   })
 
+  test('does not detach an instance inside a read-only definition', () => {
+    const graph = new SceneGraph()
+    const page = graph.getPages()[0]
+    const icon = graph.createNode('COMPONENT', page.id, { name: 'Icon' })
+    const component = graph.createNode('COMPONENT', page.id, {
+      name: 'Remote button',
+      librarySource: {
+        identity: { libraryId: 'design-system', assetKey: 'button', revisionId: 'r1' },
+        sourceNodeId: 'source',
+        readOnly: true
+      }
+    })
+    const nested = graph.createInstance(icon.id, component.id)
+    if (!nested) throw new Error('Expected instance')
+
+    const figma = new FigmaAPI(graph)
+    const nestedProxy = figma.getNodeById(nested.id)
+    if (!nestedProxy) throw new Error('Expected proxy')
+    expect(() => nestedProxy.detachInstance()).toThrow(ReadOnlyLibraryDefinitionError)
+    expect(graph.getNode(nested.id)?.type).toBe('INSTANCE')
+  })
+
   test('does not swap an instance inside a read-only definition', () => {
     const graph = new SceneGraph()
     const page = graph.getPages()[0]

@@ -11,16 +11,22 @@
 ### Added
 
 - Swap the component behind an instance with `instance.swapComponent(component)` in the plugin API, as in Figma.
+- Detach an instance from its component with `detachInstance()` in the plugin API, as in Figma, from scripts run through `eval`.
+- Run scripts written for Figma's dynamic-page mode that call `figma.getNodeByIdAsync()` or `getMainComponentAsync()`; both resolve to the same nodes as their synchronous forms.
+- Export components to Storybook with `openpencil export -f storybook`: one CSF3 story file per component set or component for React, Vue, or HTML, with a story and `select` controls per variant, a design image per variant, and an `openpencil://` link that opens the variant in OpenPencil. `--watch` re-exports on every save and removes stories of deleted components (#727).
 - Export HTML and Tailwind JSX from the app's export options and through the IO registry, and export Tailwind JSX from the CLI with `-f tailwind-jsx` (`-f jsx --style tailwind` still works). HTML export of a single layer now includes the layer itself, as other formats do.
 - Choose PPTX in the Export panel's format list, alongside PNG, JPG, WEBP, SVG, and PDF.
 
 ### Changed
 
+- `openpencil://` and web `?node=` links select the layer on another page when the current page has none, switching to that page.
 - Generate Tailwind JSX with the same class mapping as Tailwind HTML export, so both describe a design the same way, and write opaque colors as hex in HTML, CSS, and Tailwind output. `openpencil export -f jsx --style tailwind` now exports a whole page when no `--node` is given.
 - Show download progress with a percentage and transferred size while installing a desktop update, instead of an indeterminate message that lasted until the restart.
 
 ### Fixed
 
+- Keep a layer where it is drawn when it moves into or out of a rotated or flipped parent, instead of shifting it and leaving it at its old angle (#737).
+- Size auto-width text from `.pen` files to its content in CLI exports, instead of a 10000px placeholder that stretched hugging frames in HTML and Storybook output, and keep narrow widths a `.pen` file sets explicitly instead of widening multi-character text.
 - Keep grid layouts, rotation, inner shadows, every shadow of a layer, layer and background blur, flex grow, right-to-left direction, and sections in HTML export, which previously turned grids into columns and dropped the rest.
 - Show what to update instead of a blank window when the browser or system WebView is too old, naming the detected macOS, Safari, Chrome, Edge, Firefox, WebKitGTK, or WebView2 version and linking a prefilled bug report, and explain a failed start the same way (#744).
 - Start on macOS 13 with WebKit older than Safari 17.4, which previously failed with `Promise.withResolvers is not a function` (#744).
@@ -30,6 +36,7 @@
 - Render the Medium, Semibold, Bold, and other styles of variable fonts at their named weights instead of drawing Regular or a synthetic bold.
 - Load the Bold, Medium, and other styles of macOS system fonts packaged as font collections, such as Menlo, Helvetica Neue, and Avenir Next, instead of reporting them as substituted or drawing a different style (#746).
 - Load the Medium, Semibold, Bold, and other styles of installed variable fonts such as SF Pro on macOS instead of reporting them as substituted (#752).
+- Ship the MIT license text in every published npm package, and add READMEs for `@open-pencil/core`, `@open-pencil/cli`, and `@open-pencil/mcp` on npm.
 
 ### Security
 
@@ -647,7 +654,6 @@
 - Fix component property override resolution through clone chains.
 - Fix text/property overrides clobbered by second transitive sync.
 
-
 - Fix text rendering with wrong fonts on file open — all font weights (including default family) are now loaded before the first render.
 - Fix `weightToStyle` mapping: weight 400 now correctly maps to "Regular" instead of "Medium".
 - Fix detached ArrayBuffer crash when switching pages after saving — export worker now copies image buffers before transferring.
@@ -770,7 +776,6 @@
 - Centralize all color utilities in `packages/core/src/color.ts` — `colorToHex8`, `colorToCSSCompact`, `normalizeColor`, `colorDistance`; remove 5 duplicate implementations across the codebase.
 - Add `geometry.ts` with shared rotation math (`degToRad`, `radToDeg`, `rotatePoint`, `rotatedCorners`, `rotatedBBox`).
 - Extract `isArrayMixed()` helper for multi-selection property panels.
-
 
 - Add `motion-v` for declarative animations — used in mobile drawer (spring-animated height with pan gestures) and toolbar (layout-animated category switching with directional slide transitions).
 - Mobile drawer: replace `useSwipe` + manual rAF animation with `motion.div` `:animate` + `@pan`/`@panEnd`; always-on tab state (no more null `activeRibbonTab`); content stays rendered when closed.
@@ -922,17 +927,14 @@
 - Fix font picker dropdown truncating long font names.
 - Show explanation in font picker when Local Font Access API unavailable (Safari/Firefox).
 
-
 - Auto-populate GitHub Release notes from CHANGELOG.md via `ffurrer2/extract-release-notes@v2`.
 - Skip already-published npm versions on CI re-runs instead of failing.
 - Exclude non-app directories from Vite file watcher.
-
 
 - Extract shared color constants (`BLACK`, `TRANSPARENT`, `DEFAULT_SHADOW_COLOR`) — replaces 8 inline literals across core.
 - Extract shared `NodeContextMenuContent` component to avoid menu duplication.
 - Fix `@open-pencil/core` dep in MCP package: `workspace:*` for local dev (pnpm resolves at publish time).
 - Replace store thunks with a late-binding proxy.
-
 
 - Clipboard roundtrip tests: encode to Figma Kiwi binary → decode → verify.
 - 9 visual regression snapshot tests for effects rendering.
@@ -964,7 +966,6 @@
 
 - Import additional properties from Figma clipboard: `layoutAlignSelf`, `clipsContent`, `fontWeight`, `italic`, `letterSpacing`, `lineHeight`.
 - Convert `letterSpacing` PERCENT units to pixels based on font size.
-
 
 - 7 new clipboard import unit tests (14 total).
 
@@ -1105,12 +1106,10 @@ First public alpha. The editor is functional but not production-ready.
 - ScrubInput drag-to-change number controls.
 - Resizable side panels via reka-ui Splitter.
 
-
 - .fig file import via Kiwi binary codec (194 definitions, ~390 fields).
 - .fig file export with Kiwi encoding, Zstd compression, thumbnail generation.
 - Figma clipboard: copy/paste between OpenPencil and Figma.
 - Round-trip fidelity for supported node types.
-
 
 - Built-in AI chat in properties panel (⌘J).
 - Direct browser → OpenRouter communication, no backend.
@@ -1119,11 +1118,9 @@ First public alpha. The editor is functional but not production-ready.
 - Streaming markdown responses (vue-stream-markdown).
 - Tool call timeline with collapsible details.
 
-
 - JSX export of selected nodes with Tailwind-like shorthand props.
 - Syntax highlighting via Prism.js.
 - Copy to clipboard.
-
 
 - `info` — document stats, node types, fonts.
 - `tree` — visual node tree.
@@ -1139,13 +1136,11 @@ First public alpha. The editor is functional but not production-ready.
 - `analyze clusters` — repeated patterns.
 - All commands support `--json`.
 
-
 - Scene graph with flat Map storage and parentIndex tree.
 - FigmaAPI with ~65% Figma plugin API compatibility.
 - JSX renderer (TreeNode builder functions with shorthand props).
 - Kiwi binary codec (encode/decode).
 - Vector network blob encoder/decoder.
-
 
 - Tauri v2 (~5 MB).
 - Native menu bar, save/open dialogs.
@@ -1153,11 +1148,9 @@ First public alpha. The editor is functional but not production-ready.
 - Zstd compression in Rust.
 - macOS and Windows builds via GitHub Actions.
 
-
 - Runs at [app.openpencil.dev](https://app.openpencil.dev).
 - No installation required.
 - File System Access API for save/open (Chrome/Edge), download fallback elsewhere.
-
 
 - [openpencil.dev](https://openpencil.dev) — VitePress site with user guide, reference, and development docs.
 - Deployed via Cloudflare Pages.

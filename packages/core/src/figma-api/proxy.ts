@@ -222,14 +222,9 @@ export class FigmaNodeProxy {
     setPageBackgrounds(this[INTERNAL_GRAPH], this._raw(), value)
   }
 
-  /** Points this instance at another component, as Figma's swapComponent does. */
-  swapComponent(component: FigmaNodeProxy): void {
-    const n = this._raw()
-    if (n.type !== 'INSTANCE') throw new Error('swapComponent() can only be called on instances')
-    const target = this[INTERNAL_GRAPH].getNode(component[INTERNAL_ID])
-    if (target?.type !== 'COMPONENT') throw new Error('swapComponent() needs a component')
-    assertNodeEditable(this[INTERNAL_GRAPH], this[INTERNAL_ID])
-    this[INTERNAL_GRAPH].swapInstanceComponent(n.id, target.id)
+  /** The async form Figma requires in dynamic-page mode; same result as mainComponent. */
+  async getMainComponentAsync(): Promise<FigmaNodeProxy | null> {
+    return this.mainComponent
   }
 
   get mainComponent(): FigmaNodeProxy | null {
@@ -247,6 +242,25 @@ export class FigmaNodeProxy {
     const inst = this[INTERNAL_GRAPH].createInstance(n.id, pageId)
     if (!inst) throw new Error('Failed to create instance')
     return this[INTERNAL_API].wrapNode(inst.id)
+  }
+
+  /** Turns this instance into a frame that keeps its current content, like Figma's. */
+  detachInstance(): FigmaNodeProxy {
+    const n = this._raw()
+    if (n.type !== 'INSTANCE') throw new Error('detachInstance() can only be called on instances')
+    assertNodeEditable(this[INTERNAL_GRAPH], this[INTERNAL_ID])
+    this[INTERNAL_GRAPH].detachInstance(n.id)
+    return this[INTERNAL_API].wrapNode(n.id)
+  }
+
+  /** Points this instance at another component, as Figma's swapComponent does. */
+  swapComponent(component: FigmaNodeProxy): void {
+    const n = this._raw()
+    if (n.type !== 'INSTANCE') throw new Error('swapComponent() can only be called on instances')
+    const target = this[INTERNAL_GRAPH].getNode(component[INTERNAL_ID])
+    if (target?.type !== 'COMPONENT') throw new Error('swapComponent() needs a component')
+    assertNodeEditable(this[INTERNAL_GRAPH], this[INTERNAL_ID])
+    this[INTERNAL_GRAPH].swapInstanceComponent(n.id, target.id)
   }
 
   // --- Tree ---
