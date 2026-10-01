@@ -65,7 +65,7 @@ export function orderKeyBetween(lo: string | null, hi: string | null): string | 
   if (lo !== null && hi !== null && lo >= hi) return null
   const low = lo ?? ''
   let i = 0
-  while (hi !== null && i < low.length && i < hi.length && low[i] === hi[i]) i++
+  if (hi !== null) while (i < low.length && i < hi.length && low[i] === hi[i]) i++
   const a = i < low.length ? low.charCodeAt(i) : ORDER_KEY_MIN - 1
   const b = hi !== null && i < hi.length ? hi.charCodeAt(i) : ORDER_KEY_MAX + 1
   if (b - a > 1) return low.slice(0, i) + String.fromCharCode(Math.floor((a + b) / 2))
