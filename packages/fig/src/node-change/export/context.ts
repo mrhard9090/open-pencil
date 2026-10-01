@@ -178,7 +178,11 @@ export function applyColorVariableBinding(
   field: string
 ): Paint {
   const variableId = node.boundVariables[field]
-  if (!variableId) return paint
+  if (!variableId) {
+    // An imported raw paint keeps the alias it was saved with; without this a removed binding returns.
+    const { colorVar: _stale, colorVariableBinding: _legacy, ...unbound } = paint
+    return unbound
+  }
   return {
     ...paint,
     colorVar: {

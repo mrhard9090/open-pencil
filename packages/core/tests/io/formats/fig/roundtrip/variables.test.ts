@@ -180,6 +180,39 @@ describe('variable roundtrip', () => {
     expect(Object.keys(reimportedRect.boundVariables)).toContain('strokes/0/color')
   })
 
+  test('a colour binding removed from an imported layer stays removed after saving', async () => {
+    await initCodec()
+
+    const graph = new SceneGraph()
+    const page = graph.getPages()[0]
+    const brand = graph.createVariable('brand', 'COLOR', graph.createCollection('Tokens').id, {
+      r: 0.2,
+      g: 0.4,
+      b: 0.9,
+      a: 1
+    })
+    const rect = graph.createNode('RECTANGLE', page.id, {
+      name: 'Unbound Rect',
+      fills: [{ type: 'SOLID', color: { r: 0.2, g: 0.4, b: 0.9, a: 1 }, opacity: 1, visible: true }]
+    })
+    graph.bindVariable(rect.id, 'fills/0/color', brand.id)
+
+    const imported = await parseFigFile((await exportFigFile(graph)).buffer as ArrayBuffer)
+    const importedRect = expectDefined(
+      [...imported.getAllNodes()].find((n) => n.name === 'Unbound Rect'),
+      'imported rect'
+    )
+    expect(importedRect.boundVariables['fills/0/color']).toBeDefined()
+    imported.unbindVariable(importedRect.id, 'fills/0/color')
+
+    const resaved = await parseFigFile((await exportFigFile(imported)).buffer as ArrayBuffer)
+    const resavedRect = expectDefined(
+      [...resaved.getAllNodes()].find((n) => n.name === 'Unbound Rect'),
+      'resaved rect'
+    )
+    expect(resavedRect.boundVariables).toEqual({})
+  })
+
   test('node-scoped variable modes survive export → re-import', async () => {
     await initCodec()
 
