@@ -58,6 +58,6 @@ export const runtimeScenarios: RuntimeScenario[] = [
   },
   {
     name: 'XPath query',
-    code: "const { SceneGraph } = await import('@open-pencil/scene-graph'); const { FigmaAPI } = await import('@open-pencil/core/figma-api'); const { queryByXPath } = await import('@open-pencil/core/xpath'); const graph = new SceneGraph(); new FigmaAPI(graph).createRectangle(); const found = await queryByXPath(graph, '//RECTANGLE'); if (found.length !== 1) throw new Error('XPath query smoke failed')"
+    code: "const { SceneGraph } = await import('@open-pencil/scene-graph'); const { FigmaAPI } = await import('@open-pencil/core/figma-api'); const { matchByXPath, queryByXPath } = await import('@open-pencil/core/xpath'); const graph = new SceneGraph(); new FigmaAPI(graph).createRectangle(); const found = await queryByXPath(graph, '//RECTANGLE'); if (found.length !== 1 || !(await matchByXPath(graph, '@width > 0', found[0]))) throw new Error('XPath query smoke failed')"
   }
 ]
