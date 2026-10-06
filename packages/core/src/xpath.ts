@@ -1,5 +1,4 @@
 import type * as FontoxpathModule from 'fontoxpath'
-import type { IDomFacade } from 'fontoxpath'
 
 import type { SceneGraph, SceneNode } from '@open-pencil/scene-graph'
 
@@ -243,7 +242,7 @@ export async function queryByXPath(
   if (targetPages.length === 0) return []
 
   const { evaluateXPathToNodes } = await loadFontoxpath()
-  const domFacade = createDomFacade(graph) as IDomFacade
+  const domFacade = createDomFacade(graph) as FontoxpathModule.IDomFacade
   const results: SceneNode[] = []
 
   for (const page of targetPages) {
@@ -322,7 +321,7 @@ export async function matchByXPath(
   node: SceneNode
 ): Promise<boolean> {
   const { evaluateXPathToBoolean } = await loadFontoxpath()
-  const domFacade = createDomFacade(graph) as IDomFacade
+  const domFacade = createDomFacade(graph) as FontoxpathModule.IDomFacade
   const wrapped = wrapNode(graph, node)
   try {
     return evaluateXPathToBoolean(`self::*[${selector}]`, wrapped, domFacade)
